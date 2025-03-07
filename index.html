@@ -211,8 +211,8 @@
         }
 
         .equipment-icon {
-            width: 30px;
-            height: 30px;
+            width: 28px;
+            height: 28px;
             font-size: 16px;
         }
 
@@ -338,15 +338,8 @@
         }
 
         .equipment-icon {
-            width: 28px;
-            height: 28px;
-            font-size: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 4px;
-            color: white;
-            cursor: pointer;
+            width: 24px;
+            height: 24px;
         }
 
         .buy-button {
@@ -477,7 +470,7 @@
 
         #unit-info-content {
             height: 100%;
-            max-height: 400px; /* 增加高度 */
+            max-height: 400px;
             font-size: 15px;
             overflow-y: auto;
             scrollbar-width: thin;
@@ -495,7 +488,6 @@
         .info-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px; /* 增加间距 */
             padding: 5px 0; /* 增加内边距 */
             border-bottom: 1px solid #f0f0f0;
         }
@@ -744,6 +736,50 @@
             color: white; /* 恢复装备图标颜色 */
             cursor: pointer;
         }
+
+        .shop-title {
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+        }
+
+        .shop-items {
+            gap: 4px;
+        }
+
+        .shop-item {
+            min-height: 32px;
+            padding: 4px 6px;
+        }
+
+        .equipment-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .shop-item {
+            min-height: 28px;
+        }
+
+        .shop-items {
+            gap: 3px;
+        }
+
+        #unit-details {
+            display: none;
+        }
+
+        #equipment-details {
+            display: none;
+        }
+
+        .info-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+            font-size: 16px;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -782,7 +818,25 @@
             <div id="unit-info-panel">
                 <div id="unit-info-content">
                     <div class="info-title">信息</div>
-                    <div id="no-unit-message">鼠标悬停查看信息</div>
+                    <div id="no-unit-message">鼠标悬停或触摸长按查看信息</div>
+                    
+                    <!-- 装备信息面板 -->
+                    <div id="equipment-details" style="display: none;">
+                        <div class="info-row">
+                            <span class="info-label">类型:</span>
+                            <span class="info-value" id="equipment-type"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">等级:</span>
+                            <span class="info-value" id="equipment-level"></span>
+                        </div>
+                        <div class="info-ability">
+                            <div class="info-label">装备效果:</div>
+                            <div id="equipment-effects" class="info-value" style="text-align: left; margin-top: 5px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- 单位信息面板 -->
                     <div id="unit-details" style="display: none;">
                         <div class="info-row">
                             <span class="info-label">职业:</span>
@@ -816,9 +870,9 @@
                             <div class="info-label">技能描述:</div>
                             <div id="unit-ability" class="info-value" style="text-align: left; margin-top: 5px;"></div>
                         </div>
-                        <div id="equipment-info" class="info-ability" style="display: none;">
+                        <div id="unit-equipment-info" class="info-ability" style="display: none;">
                             <div class="info-label">装备效果:</div>
-                            <div id="equipment-effects" class="info-value" style="text-align: left; margin-top: 5px;"></div>
+                            <div id="unit-equipment-effects" class="info-value" style="text-align: left; margin-top: 5px;"></div>
                         </div>
                     </div>
                 </div>
@@ -1138,14 +1192,13 @@
 
         function showEquipmentInfo(equipment) {
             document.getElementById('no-unit-message').style.display = 'none';
-            document.getElementById('unit-details').style.display = 'block';
-            document.getElementById('equipment-info').style.display = 'block';
+            document.getElementById('unit-details').style.display = 'none';
+            document.getElementById('equipment-details').style.display = 'block';
             
-            document.getElementById('unit-type').textContent = equipment.name;
-            document.getElementById('unit-level').textContent = equipment.level;
+            document.getElementById('equipment-type').textContent = equipment.name;
+            document.getElementById('equipment-level').textContent = equipment.level;
             
-            let effectDescription = "";
-            effectDescription += equipment.description + ": +" + Math.round(equipment.effect * 100) + "%";
+            let effectDescription = equipment.description + ": +" + Math.round(equipment.effect * 100) + "%";
             
             if (equipment.specialAttribute) {
                 effectDescription += "<br>" + equipment.specialAttribute.name + ": " + equipment.specialAttribute.description;
@@ -1728,12 +1781,13 @@
                     document.getElementById('no-unit-message').textContent = "敌方信息在战斗开始后可见";
                     document.getElementById('no-unit-message').style.display = 'block';
                     document.getElementById('unit-details').style.display = 'none';
+                    document.getElementById('equipment-details').style.display = 'none';
                     return;
                 }
                 
                 document.getElementById('no-unit-message').style.display = 'none';
                 document.getElementById('unit-details').style.display = 'block';
-                document.getElementById('equipment-info').style.display = 'block';
+                document.getElementById('equipment-details').style.display = 'none';
                 
                 document.getElementById('unit-type').textContent = unitType.name + (unit.isBoss ? " (Boss)" : "");
                 document.getElementById('unit-level').textContent = unit.level;
@@ -1745,20 +1799,21 @@
                 
                 document.getElementById('unit-ability').textContent = unitType.ability;
                 
-                let equipmentEffects = "";
+                // 显示装备效果
                 if (unit.equipment && unit.equipment.length > 0) {
+                    let equipmentEffects = "";
                     unit.equipment.forEach((equip, index) => {
-                        if (index > 0) equipmentEffects += "<br>";
+                        if (index > 0) equipmentEffects += "<br><br>";
                         equipmentEffects += `${equip.icon} ${equip.name} ${equip.level}级: ${equip.description} +${Math.round(equip.effect * 100)}%`;
                         
                         if (equip.specialAttribute) {
                             equipmentEffects += `<br>${equip.specialAttribute.icon} ${equip.specialAttribute.name}: ${equip.specialAttribute.description}`;
                         }
                     });
-                    document.getElementById('equipment-effects').innerHTML = equipmentEffects;
-                    document.getElementById('equipment-info').style.display = 'block';
+                    document.getElementById('unit-equipment-info').style.display = 'block';
+                    document.getElementById('unit-equipment-effects').innerHTML = equipmentEffects;
                 } else {
-                    document.getElementById('equipment-info').style.display = 'none';
+                    document.getElementById('unit-equipment-info').style.display = 'none';
                 }
             } else {
                 showEquipmentInfo(unit);
@@ -1766,10 +1821,10 @@
         }
 
         function clearUnitInfoPanel() {
-            document.getElementById('no-unit-message').textContent = "鼠标悬停查看信息";
+            document.getElementById('no-unit-message').textContent = "鼠标悬停或触摸长按查看信息";
             document.getElementById('no-unit-message').style.display = 'block';
             document.getElementById('unit-details').style.display = 'none';
-            document.getElementById('equipment-info').style.display = 'none';
+            document.getElementById('equipment-details').style.display = 'none';
         }
 
         function clearUnitInfoPanelSelection() {
