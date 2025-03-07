@@ -97,6 +97,95 @@
             width: 56%;
             aspect-ratio: 10/6;
             align-self: center;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            gap: 2px;
+        }
+
+        .cell {
+            width: 100%;
+            aspect-ratio: 1/1;
+            border: 1px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .unit {
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: transparent;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .unit-level {
+            position: absolute;
+            top: -12px;
+            display: flex;
+            z-index: 5;
+        }
+
+        .level-star {
+            color: gold;
+            margin: 0 1px;
+            text-shadow: 0px 0px 2px black;
+            font-size: 12px;
+        }
+
+        .health-bar {
+            position: absolute;
+            bottom: -8px;
+            width: 80%;
+            height: 4px;
+            background-color: #ccc;
+            border-radius: 2px;
+        }
+
+        .skill-bar {
+            position: absolute;
+            bottom: -14px;
+            width: 80%;
+            height: 4px;
+            background-color: #ccc;
+            border-radius: 2px;
+        }
+
+        .equipment-slots {
+            position: absolute;
+            right: -5px;
+            bottom: -5px;
+            display: flex;
+            gap: 2px;
+        }
+
+        .equipment-slot {
+            width: 14px;
+            height: 14px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 2px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 8px;
+            color: white;
+            cursor: pointer;
         }
 
         #unit-info-panel {
