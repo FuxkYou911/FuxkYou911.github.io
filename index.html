@@ -1,0 +1,2847 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自走棋</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 1300px; /* 增加最大宽度 */
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        #game-info {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            font-size: 20px; /* 增加字体大小 */
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background-color: #f8f8f8;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        #game-main {
+            display: flex;
+            width: 100%;
+            gap: 20px;
+            justify-content: center; /* 居中显示 */
+        }
+
+        #left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 280px; /* 增加宽度 */
+        }
+
+        #shop-panel {
+            width: 100%;
+            height: 50%;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+            border: 1px solid #eee;
+        }
+
+        #inventory-panel {
+            width: 100%;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            padding: 15px;
+            border: 1px solid #eee;
+        }
+
+        .shop-title, .inventory-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .shop-items {
+            display: flex;
+            flex-direction: column;
+            gap: 5px; /* 增加间距 */
+            flex-grow: 1;
+        }
+
+        .shop-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 8px; /* 增加内边距 */
+            border-radius: 4px;
+            background-color: #f9f9f9;
+            min-height: 40px; /* 增加高度 */
+            border: 1px solid #eee;
+        }
+
+        .equipment-icon {
+            width: 36px; /* 增加装备图标大小 */
+            height: 36px; /* 增加装备图标大小 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 4px;
+            color: white;
+            font-size: 18px; /* 增加字体大小 */
+            cursor: pointer;
+        }
+
+        .buy-button {
+            padding: 5px 10px; /* 增加内边距 */
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px; /* 增加字体大小 */
+            transition: background-color 0.2s;
+        }
+        
+        .buy-button:hover {
+            background-color: #27ae60;
+        }
+        
+        .sold-out {
+            width: 100%;
+            height: 36px; /* 增加高度 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            color: #888;
+            border-radius: 4px;
+            font-style: italic;
+            font-size: 14px; /* 增加字体大小 */
+        }	
+				
+        .refresh-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 5px 10px; /* 增加内边距 */
+            background-color: #f39c12;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: center;
+            width: auto;
+            font-size: 14px; /* 增加字体大小 */
+            transition: background-color 0.2s;
+        }
+        
+        .refresh-button:hover {
+            background-color: #e67e22;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 8px; /* 增加间距 */
+        }
+
+        .inventory-slot {
+            width: 100%;
+            aspect-ratio: 1/1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            background-color: #f9f9f9;
+            transition: border-color 0.2s;
+        }
+        
+        .inventory-slot:hover {
+            border-color: #aaa;
+        }
+
+        .trash-slot {
+            background-color: rgba(231, 76, 60, 0.2);
+        }
+
+        .trash-icon {
+            color: #e74c3c;
+            font-size: 20px; /* 增加字体大小 */
+        }
+
+        #unit-info-panel {
+            width: 280px; /* 增加宽度 */
+            height: 100%;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border: 1px solid #eee;
+        }
+
+        #unit-info-content {
+            height: 100%;
+            max-height: 400px; /* 增加高度 */
+            font-size: 15px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        .info-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px; /* 增加间距 */
+            padding: 5px 0; /* 增加内边距 */
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .info-value {
+            text-align: right;
+            color: #333;
+        }
+
+        .info-ability {
+            margin-top: 15px;
+            padding: 8px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        #control-buttons {
+            display: flex;
+            gap: 15px; /* 增加间距 */
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 12px 20px; /* 增加内边距 */
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        button:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #special-effects {
+            position: absolute;
+            pointer-events: none;
+        }
+
+        @keyframes horizontal-shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(0); }
+            75% { transform: translateX(5px); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes vertical-shake {
+            0% { transform: translateY(0); }
+            25% { transform: translateY(-5px); }
+            50% { transform: translateY(0); }
+            75% { transform: translateY(5px); }
+            100% { transform: translateY(0); }
+        }
+
+        .horizontal-shake {
+            animation: horizontal-shake 0.5s ease;
+        }
+
+        .vertical-shake {
+            animation: vertical-shake 0.5s ease;
+        }
+
+        .projectile {
+            position: absolute;
+            width: 12px; /* 增加投射物大小 */
+            height: 12px; /* 增加投射物大小 */
+            border-radius: 50%;
+            background-color: gold;
+            z-index: 10; /* 确保投射物在图片上方显示 */
+            box-shadow: 0 0 5px #ffcc00; /* 添加光晕效果 */
+        }
+
+        @keyframes explosion {
+            0% { transform: scale(0); opacity: 0.8; }
+            50% { transform: scale(1.5); opacity: 0.6; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        .fireball-explosion {
+            position: absolute;
+            width: 50px; /* 增加爆炸效果大小 */
+            height: 50px; /* 增加爆炸效果大小 */
+            background-color: rgba(255, 100, 0, 0.7);
+            border-radius: 50%;
+            z-index: 10; /* 确保爆炸效果在图片上方显示 */
+            animation: explosion 1s forwards;
+            box-shadow: 0 0 15px #ff6600; /* 添加光晕效果 */
+        }
+
+        @media (max-width: 1200px) {
+            #game-container {
+                max-width: 100%;
+                padding: 10px;
+            }
+            
+            #game-main {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            #left-panel {
+                flex-direction: row;
+                width: 100%;
+            }
+            
+            #shop-panel, #inventory-panel {
+                width: 50%;
+                height: auto;
+            }
+            
+            #game-board {
+                grid-template-columns: repeat(10, minmax(30px, 50px)); /* 响应式调整 */
+                grid-template-rows: repeat(6, minmax(30px, 50px)); /* 响应式调整 */
+            }
+            
+            #unit-info-panel {
+                width: 100%;
+                margin-top: 15px;
+            }
+            
+            #control-buttons button {
+                font-size: 14px;
+                padding: 8px 12px;
+            }
+        }
+
+        .equipment-level-1 {
+            background-color: #3498db;
+        }
+
+        .equipment-level-2 {
+            background-color: #e74c3c;
+        }
+
+        .equipment-level-3 {
+            background-color: #9b59b6;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(10, minmax(40px, 70px)); /* 增加棋盘格子大小 */
+            grid-template-rows: repeat(6, minmax(40px, 70px)); /* 增加棋盘格子大小 */
+            gap: 3px; /* 增加格子间距 */
+            margin: 0 auto; /* 居中显示 */
+        }
+
+        .cell {
+            width: 100%;
+            aspect-ratio: 1/1;
+            border: 1px solid #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            cursor: pointer;
+            border-radius: 4px; /* 添加圆角 */
+        }
+
+        .ally-area {
+            background-color: rgba(255, 0, 0, 0.2);
+        }
+
+        .transition-area {
+            background-color: rgba(128, 128, 128, 0.2);
+        }
+
+        .enemy-area {
+            background-color: rgba(128, 0, 128, 0.2);
+        }
+
+        .unit {
+            position: absolute;
+            width: 85%; /* 增加单位大小 */
+            height: 85%; /* 增加单位大小 */
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: transparent; /* 隐藏文本 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* 添加阴影效果 */
+        }
+
+        .ally-unit {
+            background-color: transparent; /* 移除红色背景 */
+        }
+
+        .enemy-unit {
+            background-color: transparent; /* 移除紫色背景 */
+        }
+
+        .boss-unit {
+            background-color: transparent; /* 移除黑色背景 */
+            border: 2px solid gold;
+        }
+
+        .unit-level {
+            position: absolute;
+            top: -18px; /* 调整星级位置 */
+            display: flex;
+            z-index: 5; /* 确保星级显示在图片上方 */
+        }
+
+        .level-star {
+            color: gold;
+            margin: 0 1px;
+            text-shadow: 0px 0px 2px black; /* 添加文字阴影使星星更明显 */
+            font-size: 16px; /* 增大星星大小 */
+        }
+
+        .health-bar {
+            position: absolute;
+            bottom: -12px; /* 调整血条位置 */
+            width: 85%;
+            height: 6px; /* 增加血条高度 */
+            background-color: #ccc;
+            border-radius: 3px; /* 添加圆角 */
+        }
+
+        .health-fill {
+            height: 100%;
+            background-color: lime;
+            transition: width 0.3s ease;
+            border-radius: 3px; /* 添加圆角 */
+        }
+
+        .enemy-health-fill {
+            background-color: #ff3333; /* 敌方血条改为红色 */
+        }
+
+        .skill-bar {
+            position: absolute;
+            bottom: -20px; /* 调整技能条位置 */
+            width: 85%;
+            height: 6px; /* 增加技能条高度 */
+            background-color: #ccc;
+            border-radius: 3px; /* 添加圆角 */
+        }
+
+        .skill-fill {
+            height: 100%;
+            background-color: #0099ff;
+            transition: width 0.3s ease;
+            border-radius: 3px; /* 添加圆角 */
+        }
+
+        .unit-actions {
+            position: absolute;
+            top: -35px; /* 调整操作按钮位置 */
+            display: flex;
+            gap: 5px;
+            z-index: 10; /* 提高层级 */
+        }
+
+        .sell-button, .upgrade-button {
+            font-size: 12px; /* 增加按钮文字大小 */
+            padding: 3px 6px; /* 增加按钮内边距 */
+            cursor: pointer;
+            color: black; /* 确保按钮文本可见 */
+            border-radius: 3px; /* 添加圆角 */
+            border: 1px solid #ccc; /* 添加边框 */
+            background-color: white; /* 添加背景色 */
+        }
+
+        .equipment-slots {
+            position: absolute;
+            right: -8px; /* 调整装备槽位置 */
+            bottom: -8px; /* 调整装备槽位置 */
+            display: flex;
+            gap: 3px; /* 增加间距 */
+        }
+
+        .equipment-slot {
+            width: 18px; /* 增加装备槽大小 */
+            height: 18px; /* 增加装备槽大小 */
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 3px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px; /* 增加装备图标大小 */
+            color: white; /* 恢复装备图标颜色 */
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="game-info">
+            <div id="gold">金币: <span id="gold-count">20</span></div>
+            <div id="wave">波数: <span id="wave-count">1</span></div>
+            <div id="base-health">大本营: 
+                <span class="health-icon">❤️</span>
+                <span class="health-icon">❤️</span>
+                <span class="health-icon">❤️</span>
+            </div>
+        </div>
+        
+        <div id="game-main">
+            <div id="left-panel">
+                <div id="shop-panel">
+                    <div class="shop-title">装备商店</div>
+                    <div class="shop-items" id="shop-items-container">
+                        <!-- 商店动态添加 -->
+                    </div>
+                    <div id="refresh-button" class="refresh-button">刷新 (0金币)</div>
+                </div>
+                
+                <div id="inventory-panel">
+                    <div class="inventory-title">背包</div>
+                    <div class="inventory-grid" id="inventory-grid">
+                        <!-- 背包动态添加 -->
+                    </div>
+                </div>
+            </div>
+            
+            <div id="game-board">
+            </div>
+
+            <div id="unit-info-panel">
+                <div id="unit-info-content">
+                    <div class="info-title">信息</div>
+                    <div id="no-unit-message">鼠标悬停查看信息</div>
+                    <div id="unit-details" style="display: none;">
+                        <div class="info-row">
+                            <span class="info-label">职业:</span>
+                            <span class="info-value" id="unit-type"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">等级:</span>
+                            <span class="info-value" id="unit-level"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">血量:</span>
+                            <span class="info-value" id="unit-health"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">攻击力:</span>
+                            <span class="info-value" id="unit-attack"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">攻速:</span>
+                            <span class="info-value" id="unit-attack-speed"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">移度:</span>
+                            <span class="info-value" id="unit-move-speed"></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">攻击范围:</span>
+                            <span class="info-value" id="unit-attack-range"></span>
+                        </div>
+                        <div class="info-ability">
+                            <div class="info-label">技能描述:</div>
+                            <div id="unit-ability" class="info-value" style="text-align: left; margin-top: 5px;"></div>
+                        </div>
+                        <div id="equipment-info" class="info-ability" style="display: none;">
+                            <div class="info-label">装备效果:</div>
+                            <div id="equipment-effects" class="info-value" style="text-align: left; margin-top: 5px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="control-buttons">
+            <button id="summon-ally">召唤我方英雄 (花费2金币)</button>
+            <button id="start-battle" disabled>开始下一波</button>
+            <button id="summon-enemy">召唤敌方英雄</button>
+        </div>
+        
+        <div id="special-effects"></div>
+    </div>
+    
+    <script>
+        const gameState = {
+            gold: 20,
+            wave: 1,
+            baseHealth: 3,
+            summonCost: 2,
+            inBattle: false,
+            allyUnits: [],
+            enemyUnits: [],
+            allyUnitBackup: [],
+            selectedUnit: null,
+            hoveredUnit: null,
+            selectedEquipment: null,
+            inventory: Array(10).fill(null),
+            shopItems: Array(3).fill(null),
+            refreshCost: 0,
+            refreshCount: 0,
+            upgradeReady: {
+                W1: false,
+                A1: false,
+                M1: false,
+                H1: false,
+                S1: false,
+                W2: false,
+                A2: false,
+                M2: false,
+                H2: false,
+                S2: false,
+            }
+        };
+
+        const unitTypes = {
+            W: {
+                name: "战士",
+                baseHealth: 20,
+                baseAttack: 1,
+                attackSpeed: 0.5,
+                moveSpeed: 0.2,
+                attackRange: 1,
+                specialCD: 5,
+                specialActive: false,
+                ability: "护盾：每5秒激活一次护盾，护盾持续2秒，减少50%受到的伤害。"
+            },
+            A: { 
+                name: "射手",
+                baseHealth: 5,
+                baseAttack: 2,
+                attackSpeed: 2,
+                moveSpeed: 0.5,
+                attackRange: 3,
+                specialCD: 4,
+                specialActive: false,
+                ability: "眩晕：每4秒发射一次眩晕箭，使目标眩晕2秒无法行动。"
+            },
+            M: {
+                name: "法师",
+                baseHealth: 10,
+                baseAttack: 1,
+                attackSpeed: 1,
+                moveSpeed: 0.4,
+                attackRange: 3,
+                specialCD: 6,
+                specialActive: false,
+                ability: "火球：每6秒释放一次火球，对目标及其周围2格内的敌人造成5点伤害。"
+            },
+            H: {
+                name: "护士",
+                baseHealth: 15,
+                baseAttack: 0.5,
+                attackSpeed: 1,
+                moveSpeed: 0.4,
+                attackRange: 2,
+                specialCD: 6,
+                specialActive: false,
+                ability: "治疗：每6秒治疗生命值最低的友方单位，恢复10点生命值。"
+            },
+            S: {
+                name: "刺客",
+                baseHealth: 8,
+                baseAttack: 2,
+                attackSpeed: 1,
+                moveSpeed: 1,
+                attackRange: 1,
+                specialCD: 1,
+                specialActive: false,
+                teleported: false,
+                ability: "瞬移：战斗开始瞬移到最远敌人的身边。"
+            }
+        };
+
+        const equipmentTypes = {
+            shield: {
+                name: "护盾",
+                icon: "🛡️",
+                baseEffect: 0.3, 
+                statType: "health",
+                description: "增加生命值"
+            },
+            bow: {
+                name: "弓箭",
+                icon: "🏹",
+                baseEffect: 0.2, 
+                statType: "attack",
+                description: "增加攻击力"
+            },
+            dagger: {
+                name: "匕首",
+                icon: "🗡️",
+                baseEffect: 0.3, 
+                statType: "attackSpeed",
+                description: "增加攻度"
+            },
+            ring: {
+                name: "戒指",
+                icon: "💍",
+                baseEffect: 0.2, 
+                statType: "cooldown",
+                description: "减少技能冷却时间"
+            }
+        };
+
+        const specialAttributes = [
+            {
+                name: "吸血",
+                icon: "🧛",
+                description: "生命值增加造成伤害的50%"
+            },
+            {
+                name: "暴击",
+                icon: "⚡",
+                description: "20%的概率造成200%的伤害"
+            },
+            {
+                name: "反伤",
+                icon: "⛔",
+                description: "将受到伤害的50%反弹给攻击者"
+            },
+            {
+                name: "闪避",
+                icon: "💨",
+                description: "30%概率免疫伤害"
+            }
+        ];
+
+        function createEquipment(type, level) {
+            const equipType = equipmentTypes[type];
+            const id = Date.now() + Math.random().toString(16).slice(2);
+            
+            const effectMultiplier = equipType.baseEffect + (level - 1) * 0.1;
+            
+            const equipment = {
+                id,
+                type,
+                level,
+                name: equipType.name,
+                icon: equipType.icon,
+                statType: equipType.statType,
+                effect: effectMultiplier,
+                description: equipType.description,
+                price: level === 1 ? 5 : (level === 2 ? 15 : 50),
+                specialAttribute: null
+            };
+            
+            if (level === 3) {
+                const randomAttribute = specialAttributes[Math.floor(Math.random() * specialAttributes.length)];
+                equipment.specialAttribute = randomAttribute;
+            }
+            
+            return equipment;
+        }
+
+        function initializeBoard() {
+            const gameBoard = document.getElementById('game-board');
+            gameBoard.innerHTML = '';
+            
+            for (let row = 0; row < 6; row++) {
+                for (let col = 0; col < 10; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    if (col < 4) {
+                        cell.classList.add('ally-area');
+                    } else if (col < 6) {
+                        cell.classList.add('transition-area');
+                    } else {
+                        cell.classList.add('enemy-area');
+                    }
+                    
+                    cell.addEventListener('click', () => handleCellClick(row, col));
+                    gameBoard.appendChild(cell);
+                }
+            }
+        }
+
+        function initializeInventory() {
+            const inventoryGrid = document.getElementById('inventory-grid');
+            inventoryGrid.innerHTML = '';
+            
+            for (let i = 0; i < 10; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'inventory-slot';
+                slot.dataset.slot = i;
+                
+                if (i === 9) {
+                    slot.classList.add('trash-slot');
+                    slot.innerHTML = '<span class="trash-icon">🗑️</span>';
+                }
+                
+                slot.addEventListener('click', () => handleInventoryClick(i));
+                inventoryGrid.appendChild(slot);
+            }
+        }
+
+        function refreshShop() {
+            const shopItemsContainer = document.getElementById('shop-items-container');
+            shopItemsContainer.innerHTML = '';
+            
+            for (let i = 0; i < 3; i++) {
+                let levelProbs;
+                if (gameState.wave === 1) {
+                    levelProbs = [0.9, 0.1, 0];
+                } else if (gameState.wave < 10) {
+                    const factor = (gameState.wave - 1) / 9;
+                    levelProbs = [
+                        0.9 * (1 - factor),
+                        0.1 + 0.4 * factor,
+                        0.5 * factor
+                    ];
+                } else {
+                    levelProbs = [0, 0, 1];
+                }
+                
+                const equipTypes = Object.keys(equipmentTypes);
+                const type = equipTypes[Math.floor(Math.random() * equipTypes.length)];
+                
+                const randomValue = Math.random();
+                let level;
+                if (randomValue < levelProbs[0]) {
+                    level = 1;
+                } else if (randomValue < levelProbs[0] + levelProbs[1]) {
+                    level = 2;
+                } else {
+                    level = 3;
+                }
+                
+                const equipment = createEquipment(type, level);
+                gameState.shopItems[i] = equipment;
+                
+                const shopItem = document.createElement('div');
+                shopItem.className = 'shop-item';
+                
+                const equipIcon = document.createElement('div');
+                equipIcon.className = `equipment-icon equipment-level-${level}`;
+                equipIcon.textContent = equipment.icon;
+                equipIcon.addEventListener('click', () => showEquipmentInfo(equipment));
+                
+                const buyButton = document.createElement('button');
+                buyButton.className = 'buy-button';
+                buyButton.textContent = `购买 (${equipment.price}金币)`;
+                buyButton.addEventListener('click', () => buyEquipment(i));
+                
+                shopItem.appendChild(equipIcon);
+                shopItem.appendChild(buyButton);
+                
+                shopItemsContainer.appendChild(shopItem);
+            }
+            document.getElementById('refresh-button').textContent = `刷新 (${gameState.refreshCost}金币)`;
+        }
+
+        function buyEquipment(shopIndex) {
+				    const equipment = gameState.shopItems[shopIndex];
+				    if (!equipment) return;
+				    
+				    if (gameState.gold < equipment.price) {
+				        alert('金币不足!');
+				        return;
+				    }
+				    
+				    const emptySlotIndex = gameState.inventory.findIndex(item => item === null);
+				    if (emptySlotIndex === -1) {
+				        alert('背包已满!');
+				        return;
+				    }
+				    
+				    gameState.gold -= equipment.price;
+				    gameState.inventory[emptySlotIndex] = equipment;
+				    gameState.shopItems[shopIndex] = null; 
+				    updateGoldDisplay();
+				    renderInventory();
+				    updateShopItem(shopIndex);
+				}
+
+				function updateShopItem(shopIndex) {
+				    const shopItemContainer = document.querySelectorAll('.shop-item')[shopIndex];
+				    if (!shopItemContainer) return;
+				    
+				    if (gameState.shopItems[shopIndex] === null) {
+				        shopItemContainer.innerHTML = '<div class="sold-out">售罄</div>';
+				    }
+				}
+
+        function showEquipmentInfo(equipment) {
+            document.getElementById('no-unit-message').style.display = 'none';
+            document.getElementById('unit-details').style.display = 'block';
+            document.getElementById('equipment-info').style.display = 'block';
+            
+            document.getElementById('unit-type').textContent = equipment.name;
+            document.getElementById('unit-level').textContent = equipment.level;
+            
+            let effectDescription = "";
+            effectDescription += equipment.description + ": +" + Math.round(equipment.effect * 100) + "%";
+            
+            if (equipment.specialAttribute) {
+                effectDescription += "<br>" + equipment.specialAttribute.name + ": " + equipment.specialAttribute.description;
+            }
+            
+            document.getElementById('equipment-effects').innerHTML = effectDescription;
+        }
+
+        function handleInventoryClick(slotIndex) {
+            if (slotIndex === 9) {
+                if (gameState.selectedEquipment) {
+                    const equipment = gameState.inventory[gameState.selectedEquipment.slotIndex];
+                    if (equipment) {
+                        const refundAmount = Math.floor(equipment.price * 0.2);
+                        gameState.gold += refundAmount;
+                        gameState.inventory[gameState.selectedEquipment.slotIndex] = null;
+                        updateGoldDisplay();
+                        renderInventory();
+                        gameState.selectedEquipment = null;
+                        alert(`装备已回收，获得${refundAmount}金币`);
+                    }
+                }
+                return;
+            }
+            
+            const equipment = gameState.inventory[slotIndex];
+            if (!equipment) return;
+            
+            if (gameState.selectedEquipment) {
+                if (gameState.selectedEquipment.slotIndex === slotIndex) {
+                    gameState.selectedEquipment = null;
+                    renderInventory();
+                    clearUnitInfoPanel();
+                    return;
+                }
+            }
+            
+            gameState.selectedEquipment = {
+                type: 'inventory',
+                slotIndex: slotIndex,
+                equipment: equipment
+            };
+            
+            renderInventory();
+            showEquipmentInfo(equipment);
+        }
+
+        function renderInventory() {
+            for (let i = 0; i < 10; i++) {
+                const slotElement = document.querySelector(`.inventory-slot[data-slot="${i}"]`);
+                if (!slotElement) continue;
+                
+                if (i === 9) continue; 
+                
+                const equipment = gameState.inventory[i];
+                
+                if (slotElement.querySelector('.equipment-icon')) {
+                    slotElement.querySelector('.equipment-icon').remove();
+                }
+                
+                if (equipment) {
+                    const equipIcon = document.createElement('div');
+                    equipIcon.className = `equipment-icon equipment-level-${equipment.level}`;
+                    equipIcon.textContent = equipment.icon;
+                    slotElement.appendChild(equipIcon);
+                    
+                    if (gameState.selectedEquipment && 
+                        gameState.selectedEquipment.type === 'inventory' && 
+                        gameState.selectedEquipment.slotIndex === i) {
+                        slotElement.style.border = '2px solid yellow';
+                    } else {
+                        slotElement.style.border = '1px solid #ddd';
+                    }
+                } else {
+                    slotElement.style.border = '1px solid #ddd';
+                }
+            }
+        }
+
+        function handleCellClick(row, col) {
+            if (gameState.inBattle) return;
+            
+            if (col >= 4) return;
+            
+            if (gameState.selectedEquipment) {
+                const unit = getUnitAtPosition(row, col);
+                if (unit && unit.isAlly) {
+                    equipToUnit(unit);
+                    return;
+                }
+            }
+            
+            if (gameState.selectedUnit) {
+                moveUnit(gameState.selectedUnit, row, col);
+                return;
+            }
+            
+            const unit = getUnitAtPosition(row, col);
+            if (unit) {
+                selectUnit(unit);
+            }
+        }
+
+        function equipToUnit(unit) {
+            if (!unit.equipment) {
+                unit.equipment = [];
+            }
+            
+            if (unit.equipment.length >= 2) {
+                alert('装备已满！');
+                return;
+            }
+            
+            const equipment = gameState.selectedEquipment.equipment;
+            if (!equipment) return;
+            
+            unit.equipment.push(equipment);
+            applyEquipmentEffect(unit, equipment);
+            
+            gameState.inventory[gameState.selectedEquipment.slotIndex] = null;
+            
+            gameState.selectedEquipment = null;
+            renderInventory();
+            renderUnit(unit);
+            
+            if (gameState.hoveredUnit && gameState.hoveredUnit.id === unit.id) {
+                updateUnitInfoPanel(unit);
+            }
+        }
+
+        function applyEquipmentEffect(unit, equipment) {
+            const effect = equipment.effect;
+            
+            switch (equipment.statType) {
+                case "health":
+                    const healthBonus = unit.maxHealth * effect;
+                    unit.maxHealth += healthBonus;
+                    unit.currentHealth += healthBonus;
+                    break;
+                case "attack":
+                    unit.attack *= (1 + effect);
+                    break;
+                case "attackSpeed":
+                    unit.attackSpeed *= (1 + effect);
+                    break;
+                case "cooldown":
+                    unit.specialCD *= (1 - effect);
+                    break;
+            }
+        }
+
+        function removeEquipmentEffect(unit, equipment) {
+            const effect = equipment.effect;
+            
+            switch (equipment.statType) {
+                case "health":
+                    const healthBonus = unit.maxHealth / (1 + effect);
+                    const healthPercentage = unit.currentHealth / unit.maxHealth;
+                    unit.maxHealth = healthBonus;
+                    unit.currentHealth = Math.max(1, healthPercentage * healthBonus);
+                    break;
+                case "attack":
+                    unit.attack /= (1 + effect);
+                    break;
+                case "attackSpeed":
+                    unit.attackSpeed /= (1 + effect);
+                    break;
+                case "cooldown":
+                    unit.specialCD /= (1 - effect);
+                    break;
+            }
+        }
+
+        function selectUnit(unit) {
+            if (gameState.selectedUnit) {
+                const prevUnitElement = document.querySelector(`.unit[data-id="${gameState.selectedUnit.id}"]`);
+                if (prevUnitElement) {
+                    prevUnitElement.style.border = "none";
+                    hideUnitActions(gameState.selectedUnit);
+                }
+            }
+
+            gameState.selectedUnit = unit;
+            const unitElement = document.querySelector(`.unit[data-id="${unit.id}"]`);
+            if (unitElement) {
+                unitElement.style.border = "2px solid yellow";
+
+                showUnitActions(unit);
+            }
+
+            updateUnitInfoPanel(unit);
+        }
+
+        function showUnitActions(unit) {
+            const unitElement = document.querySelector(`.unit[data-id="${unit.id}"]`);
+            if (!unitElement) return;
+            
+            let actionsDiv = unitElement.querySelector('.unit-actions');
+            
+            if (!actionsDiv) {
+                actionsDiv = document.createElement('div');
+                actionsDiv.className = 'unit-actions';
+                unitElement.appendChild(actionsDiv);
+            }
+            
+            actionsDiv.innerHTML = '';
+
+            // 只有玩家单位（非boss）可以显示出售按钮
+            if (unit.isAlly && !unit.isBoss) {
+                const sellButton = document.createElement('button');
+                sellButton.className = 'sell-button';
+                sellButton.textContent = '卖出';
+                sellButton.style.color = 'black'; // 确保按钮文本可见
+                sellButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // 计算卖出价格（根据单位等级）
+                    const sellPrice = unit.level * 2;
+                    if (confirm(`确定要卖出该单位吗？可获得${sellPrice}金币`)) {
+                        sellUnit(unit);
+                    }
+                });
+                actionsDiv.appendChild(sellButton);
+            }
+
+            const typeLevel = unit.type + unit.level;
+            if (gameState.upgradeReady[typeLevel] && unit.level < 3) {
+                const upgradeButton = document.createElement('button');
+                upgradeButton.className = 'upgrade-button';
+                upgradeButton.textContent = '升级';
+                upgradeButton.style.color = 'black'; // 确保按钮文本可见
+                upgradeButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    upgradeUnit(unit);
+                });
+                actionsDiv.appendChild(upgradeButton);
+            }
+        }
+
+        function hideUnitActions(unit) {
+            const unitElement = document.querySelector(`.unit[data-id="${unit.id}"]`);
+            if (!unitElement) return;
+            
+            const actionsDiv = unitElement.querySelector('.unit-actions');
+            if (actionsDiv) {
+                actionsDiv.innerHTML = '';
+            }
+        }
+
+        function moveUnit(unit, targetRow, targetCol) {
+            if (targetCol >= 4 || getUnitAtPosition(targetRow, targetCol)) {
+                deselectUnit();
+                return;
+            }
+            
+            unit.row = targetRow;
+            unit.col = targetCol;
+            
+            renderUnit(unit);
+            deselectUnit();
+        }
+
+        function deselectUnit() {
+            if (gameState.selectedUnit) {
+                const unitElement = document.querySelector(`.unit[data-id="${gameState.selectedUnit.id}"]`);
+                if (unitElement) {
+                    unitElement.style.border = "none";
+                    hideUnitActions(gameState.selectedUnit);
+                }
+                gameState.selectedUnit = null;
+
+                clearUnitInfoPanelSelection();
+            }
+        }
+
+        function getUnitAtPosition(row, col) {
+            return [...gameState.allyUnits, ...gameState.enemyUnits].find(u => u.row === row && u.col === col);
+        }
+
+        function summonAllyHero() {
+            if (gameState.gold < gameState.summonCost) {
+                alert('金币不足!');
+                return;
+            }
+            
+            const availablePositions = [];
+            for (let row = 0; row < 6; row++) {
+                for (let col = 0; col < 4; col++) {
+                    if (!getUnitAtPosition(row, col)) {
+                        availablePositions.push({row, col});
+                    }
+                }
+            }
+            
+            if (availablePositions.length === 0) {
+                alert('位置已满!');
+                return;
+            }
+            
+            const position = availablePositions[Math.floor(Math.random() * availablePositions.length)];
+            const types = ['W', 'A', 'M', 'H', 'S'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            const newUnit = createUnit(type, 1, position.row, position.col, true);
+            gameState.allyUnits.push(newUnit);
+            
+            gameState.gold -= gameState.summonCost;
+            gameState.summonCost += 2;
+            
+            updateGoldDisplay();
+            renderUnit(newUnit);
+            document.getElementById('summon-ally').textContent = `召唤英雄 (花费${gameState.summonCost}金币)`;
+            
+            checkUpgradeAvailability();
+        }
+
+        function summonEnemyHero() {
+            const availablePositions = [];
+            for (let row = 0; row < 6; row++) {
+                for (let col = 6; col < 10; col++) {
+                    if (!getUnitAtPosition(row, col)) {
+                        availablePositions.push({row, col});
+                    }
+                }
+            }
+            
+            if (availablePositions.length === 0) {
+                alert('敌方区域已满!');
+                return;
+            }
+            
+            let levelProbs;
+            if (gameState.wave === 1) {
+                levelProbs = [0.9, 0.1, 0];
+            } else if (gameState.wave < 10) {
+                const factor = (gameState.wave - 1) / 9;
+                levelProbs = [
+                    0.9 * (1 - factor),
+                    0.1 + 0.2 * factor,
+                    0.3 * factor
+                ];
+            } else {
+                levelProbs = [0, 0, 1];
+            }
+            
+            const position = availablePositions[Math.floor(Math.random() * availablePositions.length)];
+            const types = ['W', 'A', 'M', 'H', 'S'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            const randomValue = Math.random();
+            let level;
+            if (randomValue < levelProbs[0]) {
+                level = 1;
+            } else if (randomValue < levelProbs[0] + levelProbs[1]) {
+                level = 2;
+            } else {
+                level = 3;
+            }
+            
+            const newUnit = createUnit(type, level, position.row, position.col, false);
+            newUnit.hidden = true;
+            gameState.enemyUnits.push(newUnit);
+            
+            renderUnit(newUnit);
+            
+            checkBattleReady();
+        }
+
+        function checkBattleReady() {
+            const startBattleButton = document.getElementById('start-battle');
+            if (gameState.enemyUnits.length > 0 && !gameState.inBattle) {
+                startBattleButton.disabled = false;
+            } else {
+                startBattleButton.disabled = true;
+            }
+        }
+
+        function createUnit(type, level, row, col, isAlly, isBoss = false) {
+            const unitType = unitTypes[type];
+            const id = Date.now() + Math.random().toString(16).slice(2);
+            
+            let maxHealth, attack;
+            if (isBoss) {
+                const bossPower = Math.floor(gameState.wave / 5);
+                maxHealth = bossPower * 20;
+                attack = bossPower * 2;
+            } else {
+                maxHealth = unitType.baseHealth * Math.pow(2, level - 1);
+                attack = unitType.baseAttack * Math.pow(2, level - 1);
+            }
+            
+            const unit = {
+                id,
+                type,
+                level,
+                row,
+                col,
+                isAlly,
+                isBoss,
+                hidden: false,
+                maxHealth: maxHealth,
+                currentHealth: maxHealth,
+                attack: attack,
+                attackSpeed: unitType.attackSpeed,
+                moveSpeed: unitType.moveSpeed,
+                attackRange: unitType.attackRange,
+                specialCD: unitType.specialCD,
+                specialTimer: 0,
+                lastAttackTime: 0,
+                stunned: false,
+                stunTimer: 0,
+                path: null,
+                lastPosition: { row, col },
+                moveFailCounter: 0,
+                stuckCounter: 0,
+                targetId: null,
+                equipment: [],
+                lifesteal: false,
+                critChance: 0,
+                damageReflection: false,
+                dodgeChance: 0
+            };
+
+            if (type === 'W') {
+                unit.shieldTimer = 0;
+            }
+
+            return unit;
+        }
+
+        function renderUnit(unit) {
+            const oldUnitElement = document.querySelector(`.unit[data-id="${unit.id}"]`);
+            if (oldUnitElement) {
+                oldUnitElement.remove();
+            }
+            
+            const unitElement = document.createElement('div');
+            unitElement.className = `unit ${unit.isAlly ? 'ally-unit' : 'enemy-unit'}`;
+            if (unit.isBoss) {
+                unitElement.classList.add('boss-unit');
+            }
+            unitElement.dataset.id = unit.id;
+            
+            if (!unit.hidden) {
+                unitElement.textContent = unit.type;
+                // 设置背景图片
+                const imgPrefix = unit.isAlly ? 'Ally_' : 'Enemy_';
+                unitElement.style.backgroundImage = `url('pic/${imgPrefix}${unit.type}.png')`;
+            } else {
+                unitElement.textContent = '?';
+                unitElement.style.color = 'purple'; // 确保问号可见
+            }
+            
+            const levelDiv = document.createElement('div');
+            levelDiv.className = 'unit-level';
+            for (let i = 0; i < unit.level; i++) {
+                const star = document.createElement('span');
+                star.className = 'level-star';
+                star.textContent = '★';
+                levelDiv.appendChild(star);
+            }
+            unitElement.appendChild(levelDiv);
+            
+            const healthBar = document.createElement('div');
+            healthBar.className = 'health-bar';
+            const healthFill = document.createElement('div');
+            healthFill.className = `health-fill ${!unit.isAlly ? 'enemy-health-fill' : ''}`;
+            healthFill.style.width = `${(unit.currentHealth / unit.maxHealth) * 100}%`;
+            healthBar.appendChild(healthFill);
+            unitElement.appendChild(healthBar);
+            
+            const skillBar = document.createElement('div');
+            skillBar.className = 'skill-bar';
+            const skillFill = document.createElement('div');
+            skillFill.className = 'skill-fill';
+            const skillProgress = (unit.specialTimer / unit.specialCD) * 100;
+            skillFill.style.width = `${skillProgress}%`;
+            skillBar.appendChild(skillFill);
+            unitElement.appendChild(skillBar);
+            
+            if (unit.isAlly || unit.isBoss) {
+                const equipmentSlotsDiv = document.createElement('div');
+                equipmentSlotsDiv.className = 'equipment-slots';
+                
+                for (let i = 0; i < 2; i++) {
+                    const slotDiv = document.createElement('div');
+                    slotDiv.className = 'equipment-slot';
+                    slotDiv.dataset.slot = i;
+                    
+                    if (unit.isBoss) {
+                        slotDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.3)'; // Boss装备槽使用灰色透明背景
+                    }
+                    
+                    if (unit.equipment && unit.equipment[i]) {
+                        slotDiv.textContent = unit.equipment[i].icon;
+                        slotDiv.style.backgroundColor = 
+                            unit.equipment[i].level === 1 ? 'rgba(52, 152, 219, 0.7)' : 
+                            unit.equipment[i].level === 2 ? 'rgba(231, 76, 60, 0.7)' : 
+                            'rgba(155, 89, 182, 0.7)';
+                        
+                        if (unit.isAlly) { // 只有玩家单位可以卸下装备
+                            slotDiv.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                unequipItem(unit, i);
+                            });
+                        }
+                    }
+                    
+                    equipmentSlotsDiv.appendChild(slotDiv);
+                }
+                
+                unitElement.appendChild(equipmentSlotsDiv);
+            }
+
+            const cellElement = document.querySelector(`.cell[data-row="${unit.row}"][data-col="${unit.col}"]`);
+            if (cellElement) {
+                cellElement.appendChild(unitElement);
+            }
+            
+            if ((unit.isAlly || unit.isBoss) && !gameState.inBattle) {
+                unitElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (gameState.selectedEquipment) {
+                        if (unit.isAlly) {
+                            equipToUnit(unit);
+                        }
+                    } else {
+                        selectUnit(unit);
+                    }
+                });
+            }
+
+            unitElement.addEventListener('mouseenter', () => {
+                const canViewInfo = unit.isAlly || unit.isBoss || gameState.inBattle;
+                if (canViewInfo) {
+                    gameState.hoveredUnit = unit;
+                    updateUnitInfoPanel(unit);
+                }
+            });
+
+            unitElement.addEventListener('mouseleave', () => {
+                if (!gameState.selectedUnit) {
+                    gameState.hoveredUnit = null;
+                    clearUnitInfoPanel();
+                }
+            });
+        }
+
+        function unequipItem(unit, slotIndex) {
+            if (gameState.inBattle) return;
+            
+            if (!unit.equipment || !unit.equipment[slotIndex]) return;
+            
+            const equipment = unit.equipment[slotIndex];
+            
+            const emptySlotIndex = gameState.inventory.findIndex(item => item === null);
+            if (emptySlotIndex === -1) {
+                alert('背包已满!');
+                return;
+            }
+            
+            removeEquipmentEffect(unit, equipment);
+            
+            gameState.inventory[emptySlotIndex] = equipment;
+            
+            unit.equipment.splice(slotIndex, 1);
+            
+            renderInventory();
+            renderUnit(unit);
+            
+            if (gameState.hoveredUnit && gameState.hoveredUnit.id === unit.id) {
+                updateUnitInfoPanel(unit);
+            }
+        }
+
+        function updateUnitInfoPanel(unit) {
+            if (unit.type && unitTypes[unit.type]) {
+                const unitType = unitTypes[unit.type];
+                
+                if (!unit.isAlly && !unit.isBoss && !gameState.inBattle) {
+                    document.getElementById('no-unit-message').textContent = "敌方信息在战斗开始后可见";
+                    document.getElementById('no-unit-message').style.display = 'block';
+                    document.getElementById('unit-details').style.display = 'none';
+                    return;
+                }
+                
+                document.getElementById('no-unit-message').style.display = 'none';
+                document.getElementById('unit-details').style.display = 'block';
+                document.getElementById('equipment-info').style.display = 'block';
+                
+                document.getElementById('unit-type').textContent = unitType.name + (unit.isBoss ? " (Boss)" : "");
+                document.getElementById('unit-level').textContent = unit.level;
+                document.getElementById('unit-health').textContent = `${Math.ceil(unit.currentHealth)}/${Math.ceil(unit.maxHealth)}`;
+                document.getElementById('unit-attack').textContent = Math.round(unit.attack * 10) / 10;
+                document.getElementById('unit-attack-speed').textContent = Math.round(unit.attackSpeed * 100) / 100 + " 次/秒";
+                document.getElementById('unit-move-speed').textContent = unit.moveSpeed;
+                document.getElementById('unit-attack-range').textContent = unit.attackRange + " 格";
+                
+                document.getElementById('unit-ability').textContent = unitType.ability;
+                
+                let equipmentEffects = "";
+                if (unit.equipment && unit.equipment.length > 0) {
+                    unit.equipment.forEach((equip, index) => {
+                        if (index > 0) equipmentEffects += "<br>";
+                        equipmentEffects += `${equip.icon} ${equip.name} ${equip.level}级: ${equip.description} +${Math.round(equip.effect * 100)}%`;
+                        
+                        if (equip.specialAttribute) {
+                            equipmentEffects += `<br>${equip.specialAttribute.icon} ${equip.specialAttribute.name}: ${equip.specialAttribute.description}`;
+                        }
+                    });
+                    document.getElementById('equipment-effects').innerHTML = equipmentEffects;
+                    document.getElementById('equipment-info').style.display = 'block';
+                } else {
+                    document.getElementById('equipment-info').style.display = 'none';
+                }
+            } else {
+                showEquipmentInfo(unit);
+            }
+        }
+
+        function clearUnitInfoPanel() {
+            document.getElementById('no-unit-message').textContent = "鼠标悬停查看信息";
+            document.getElementById('no-unit-message').style.display = 'block';
+            document.getElementById('unit-details').style.display = 'none';
+            document.getElementById('equipment-info').style.display = 'none';
+        }
+
+        function clearUnitInfoPanelSelection() {
+            if (gameState.hoveredUnit) {
+                updateUnitInfoPanel(gameState.hoveredUnit);
+            } else {
+                clearUnitInfoPanel();
+            }
+        }
+
+        function updateGoldDisplay() {
+            document.getElementById('gold-count').textContent = gameState.gold;
+        }
+
+        function updateWaveDisplay() {
+            document.getElementById('wave-count').textContent = gameState.wave;
+        }
+
+        function updateBaseHealthDisplay() {
+            const healthIcons = document.querySelectorAll('.health-icon');
+            healthIcons.forEach((icon, index) => {
+                if (index < gameState.baseHealth) {
+                    icon.style.opacity = 1;
+                } else {
+                    icon.style.opacity = 0.3;
+                }
+            });
+        }
+
+        function sellUnit(unit) {
+            gameState.gold += 1;
+            updateGoldDisplay();
+            
+            if (unit.equipment && unit.equipment.length > 0) {
+                for (let i = unit.equipment.length - 1; i >= 0; i--) {
+                    const equipment = unit.equipment[i];
+                    const emptySlotIndex = gameState.inventory.findIndex(item => item === null);
+                    if (emptySlotIndex !== -1) {
+                        gameState.inventory[emptySlotIndex] = equipment;
+                    }
+                }
+                renderInventory();
+            }
+            
+            gameState.allyUnits = gameState.allyUnits.filter(u => u.id !== unit.id);
+            
+            const unitElement = document.querySelector(`.unit[data-id="${unit.id}"]`);
+            if (unitElement) {
+                unitElement.remove();
+            }
+            
+            gameState.selectedUnit = null;
+            
+            checkUpgradeAvailability();
+            
+            clearUnitInfoPanel();
+        }
+
+        function checkUpgradeAvailability() {
+            for (const key in gameState.upgradeReady) {
+                gameState.upgradeReady[key] = false;
+            }
+            
+            const countMap = {
+                W1: 0, A1: 0, M1: 0, H1: 0, S1: 0,
+                W2: 0, A2: 0, M2: 0, H2: 0, S2: 0
+            };
+            
+            gameState.allyUnits.forEach(unit => {
+                const key = unit.type + unit.level;
+                if (key in countMap) {
+                    countMap[key]++;
+                }
+            });
+            
+            for (const key in countMap) {
+                if (countMap[key] >= 3) {
+                    gameState.upgradeReady[key] = true;
+                }
+            }
+            
+            gameState.allyUnits.forEach(unit => {
+                const key = unit.type + unit.level;
+                if (gameState.upgradeReady[key] && unit.level < 3) {
+                    if (gameState.selectedUnit && gameState.selectedUnit.id === unit.id) {
+                        showUnitActions(unit);
+                    }
+                }
+            });
+        }
+
+        function upgradeUnit(unit) {
+            if (unit.level >= 3) return;
+            
+            const typeLevel = unit.type + unit.level;
+            if (!gameState.upgradeReady[typeLevel]) return;
+            
+            const sameTypeUnits = gameState.allyUnits.filter(
+                u => u.type === unit.type && u.level === unit.level
+            ).sort((a, b) => (a.id === unit.id ? -1 : (b.id === unit.id ? 1 : 0)));
+            
+            const unitsToRemove = sameTypeUnits.slice(1, 3);
+            
+            unitsToRemove.forEach(u => {
+                if (u.equipment && u.equipment.length > 0) {
+                    u.equipment.forEach(equipment => {
+                        const emptySlotIndex = gameState.inventory.findIndex(item => item === null);
+                        if (emptySlotIndex !== -1) {
+                            gameState.inventory[emptySlotIndex] = equipment;
+                        }
+                    });
+                }
+                
+                gameState.allyUnits = gameState.allyUnits.filter(unit => unit.id !== u.id);
+                const unitElement = document.querySelector(`.unit[data-id="${u.id}"]`);
+                if (unitElement) unitElement.remove();
+            });
+            
+            unit.level++;
+            
+            const baseMaxHealth = unitTypes[unit.type].baseHealth * Math.pow(2, unit.level - 1);
+            const baseAttack = unitTypes[unit.type].baseAttack * Math.pow(2, unit.level - 1);
+            
+            const healthPercentage = unit.currentHealth / unit.maxHealth;
+            
+            unit.maxHealth = baseMaxHealth;
+            unit.attack = baseAttack;
+            unit.attackSpeed = unitTypes[unit.type].attackSpeed;
+            unit.specialCD = unitTypes[unit.type].specialCD;
+            
+            if (unit.equipment) {
+                unit.equipment.forEach(equipment => {
+                    applyEquipmentEffect(unit, equipment);
+                });
+            }
+            
+            unit.currentHealth = healthPercentage * unit.maxHealth;
+            
+            renderUnit(unit);
+            renderInventory();
+            
+            checkUpgradeAvailability();
+            
+            if (gameState.selectedUnit && gameState.selectedUnit.id === unit.id) {
+                selectUnit(unit);
+            }
+        }
+
+        function spawnBoss() {
+				    const availablePositions = [];
+				    for (let row = 0; row < 6; row++) {
+				        for (let col = 6; col < 10; col++) {
+				            if (!getUnitAtPosition(row, col)) {
+				                availablePositions.push({row, col});
+				            }
+				        }
+				    }
+				    
+				    if (availablePositions.length === 0) {
+				        return false;
+				    }
+				    
+				    const position = availablePositions[Math.floor(Math.random() * availablePositions.length)];
+				    const types = ['W', 'A', 'M', 'H', 'S'];
+				    const type = types[Math.floor(Math.random() * types.length)];
+				    
+				    const bossUnit = createUnit(type, 3, position.row, position.col, false, true);
+				    
+				    bossUnit.equipment = [];
+				    
+				    for (let i = 0; i < 2; i++) {
+				        const equipTypes = Object.keys(equipmentTypes);
+				        const type = equipTypes[Math.floor(Math.random() * equipTypes.length)];
+				        
+				        let levelProbs;
+				        if (gameState.wave < 10) {
+				            const factor = (gameState.wave - 5) / 5; 
+				            levelProbs = [
+				                Math.max(0.6 - 0.6 * factor, 0),
+				                Math.max(0.3 - 0.1 * factor, 0.1),
+				                Math.min(0.1 + 0.7 * factor, 0.9)
+				            ];
+				        } else {
+				            levelProbs = [0, 0.3, 0.7];
+				        }
+				        
+				        const randomValue = Math.random();
+				        let level;
+				        if (randomValue < levelProbs[0]) {
+				            level = 1;
+				        } else if (randomValue < levelProbs[0] + levelProbs[1]) {
+				            level = 2;
+				        } else {
+				            level = 3;
+				        }
+				        
+				        const equipment = createEquipment(type, level);
+				        bossUnit.equipment.push(equipment);
+				        
+				        applyEquipmentEffect(bossUnit, equipment);
+				        
+				        if (equipment.specialAttribute) {
+				            switch(equipment.specialAttribute.name) {
+				                case "吸血":
+				                    bossUnit.lifesteal = true;
+				                    break;
+				                case "暴击":
+				                    bossUnit.critChance = 0.2;
+				                    break;
+				                case "反伤":
+				                    bossUnit.damageReflection = true;
+				                    break;
+				                case "闪避":
+				                    bossUnit.dodgeChance = 0.3;
+				                    break;
+				            }
+				        }
+				    }
+				    
+				    gameState.enemyUnits.push(bossUnit);
+				    
+				    renderUnit(bossUnit);
+				    
+				    checkBattleReady();
+				    
+				    return true;
+				}
+
+        function startBattle() {
+            if (gameState.inBattle || gameState.enemyUnits.length === 0) return;
+            
+            gameState.inBattle = true;           
+            
+            document.getElementById('summon-ally').disabled = true;
+            document.getElementById('start-battle').disabled = true;
+            document.getElementById('summon-enemy').disabled = true;
+            
+            gameState.allyUnitBackup = JSON.parse(JSON.stringify(gameState.allyUnits));
+            
+            gameState.enemyUnits.forEach(unit => {
+                unit.hidden = false;
+                renderUnit(unit);
+            });
+            
+            handleAllyAssassinTeleport();
+            handleEnemyAssassinTeleport();
+            
+            deselectUnit();
+            
+            battleLoop();
+        }
+
+        function handleAllyAssassinTeleport() {
+            const assassins = gameState.allyUnits.filter(unit => unit.type === 'S' && !unit.teleported);
+            const enemies = gameState.enemyUnits;
+            
+            if (assassins.length === 0 || enemies.length === 0) return;
+            
+            assassins.forEach(assassin => {
+                let farthestEnemy = null;
+                let maxDistance = -1;
+                
+                enemies.forEach(enemy => {
+                    const distance = calculateDistance(assassin, enemy);
+                    if (distance > maxDistance) {
+                        maxDistance = distance;
+                        farthestEnemy = enemy;
+                    }
+                });
+                
+                if (farthestEnemy) {
+                    const adjacentPositions = [
+                        {row: farthestEnemy.row - 1, col: farthestEnemy.col},
+                        {row: farthestEnemy.row + 1, col: farthestEnemy.col},
+                        {row: farthestEnemy.row, col: farthestEnemy.col - 1},
+                        {row: farthestEnemy.row, col: farthestEnemy.col + 1}
+                    ];
+                    
+                    const validPositions = adjacentPositions.filter(pos => {
+                        return pos.row >= 0 && pos.row < 6 && 
+                               pos.col >= 0 && pos.col < 10 && 
+                               !getUnitAtPosition(pos.row, pos.col);
+                    });
+                    
+                    if (validPositions.length > 0) {
+                        const teleportPos = validPositions[Math.floor(Math.random() * validPositions.length)];
+                        
+                        assassin.row = teleportPos.row;
+                        assassin.col = teleportPos.col;
+                        
+                        assassin.teleported = true;
+                        
+                        renderUnit(assassin);
+                        
+                        showSpecialEffect(assassin, '⚡');
+                    }
+                }
+            });
+        }
+        
+        function handleEnemyAssassinTeleport() {
+            const enemies = gameState.enemyUnits.filter(unit => unit.type === 'S' && !unit.teleported);
+            const assassins = gameState.allyUnits;
+            
+            if (enemies.length === 0 || assassins.length === 0) return;
+            
+            enemies.forEach(enemy => {
+                let farthestAlly = null;
+                let maxDistance = -1;
+                
+                assassins.forEach(assassin => {
+                    const distance = calculateDistance(enemy, assassin);
+                    if (distance > maxDistance) {
+                        maxDistance = distance;
+                        farthestAlly = assassin;
+                    }
+                });
+                
+                if (farthestAlly) {
+                    const adjacentPositions = [
+                        {row: farthestAlly.row - 1, col: farthestAlly.col},
+                        {row: farthestAlly.row + 1, col: farthestAlly.col},
+                        {row: farthestAlly.row, col: farthestAlly.col - 1},
+                        {row: farthestAlly.row, col: farthestAlly.col + 1}
+                    ];
+                    
+                    const validPositions = adjacentPositions.filter(pos => {
+                        return pos.row >= 0 && pos.row < 6 && 
+                               pos.col >= 0 && pos.col < 10 && 
+                               !getUnitAtPosition(pos.row, pos.col);
+                    });
+                    
+                    if (validPositions.length > 0) {
+                        const teleportPos = validPositions[Math.floor(Math.random() * validPositions.length)];
+                        
+                        enemy.row = teleportPos.row;
+                        enemy.col = teleportPos.col;
+                        
+                        enemy.teleported = true;
+                        
+                        renderUnit(enemy);
+                        
+                        showSpecialEffect(enemy, '⚡');
+                    }
+                }
+            });
+        }
+
+        function checkAndRemoveDeadUnits() {
+            for (let i = gameState.enemyUnits.length - 1; i >= 0; i--) {
+                const unit = gameState.enemyUnits[i];
+                if (unit.currentHealth <= 0) {
+                    const unitElement = document.querySelector(`.unit[data-id="${unit.id}"]`);
+                    if (unitElement) unitElement.remove();
+                    
+                    gameState.enemyUnits.splice(i, 1);
+                    
+                    if (unit.isBoss) {
+                        gameState.gold += 10; 
+                    } else {
+                        gameState.gold += 4; 
+                    }
+                    updateGoldDisplay();
+                }
+            }
+            
+            for (let i = gameState.allyUnits.length - 1; i >= 0; i--) {
+                const unit = gameState.allyUnits[i];
+                if (unit.currentHealth <= 0) {
+                    const unitElement = document.querySelector(`.unit[data-id="${unit.id}"]`);
+                    if (unitElement) unitElement.remove();
+                    
+                    gameState.allyUnits.splice(i, 1);
+                }
+            }
+        }
+
+        function findReachableTarget(unit, enemies) {
+            if (enemies.length === 0) return null;
+            
+            if (unit.targetId) {
+                const currentTarget = enemies.find(enemy => enemy.id === unit.targetId);
+                if (currentTarget) {
+                    const distance = calculateDistance(unit, currentTarget);
+                    if (distance <= unit.attackRange) {
+                        return currentTarget;
+                    }
+                    
+                    const hasAccessibleSpace = findAccessibleAdjacentSpace(unit, currentTarget);
+                    if (hasAccessibleSpace) {
+                        return currentTarget;
+                    }
+                }
+            }
+            
+            const sortedEnemies = [...enemies].sort((a, b) => {
+                return calculateDistance(unit, a) - calculateDistance(unit, b);
+            });
+            
+            for (const enemy of sortedEnemies) {
+                const distance = calculateDistance(unit, enemy);
+                if (distance <= unit.attackRange) {
+                    unit.targetId = enemy.id;
+                    return enemy;
+                }
+            }
+            
+            for (const enemy of sortedEnemies) {
+                if (findAccessibleAdjacentSpace(unit, enemy)) {
+                    unit.targetId = enemy.id;
+                    return enemy;
+                }
+            }
+            
+            unit.targetId = sortedEnemies[0].id;
+            return sortedEnemies[0];
+        }
+
+        function findAccessibleAdjacentSpace(unit, target) {
+            const adjacentSpaces = getAdjacentSpaces(target);
+            
+            const emptySpaces = adjacentSpaces.filter(space => !getUnitAtPosition(space.row, space.col));
+            
+            for (const space of emptySpaces) {
+                const path = aStarSearch(
+                    { row: unit.row, col: unit.col }, 
+                    space,
+                    true
+                );
+                
+                if (path && path.length > 0) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        function getAdjacentSpaces(position) {
+            const spaces = [];
+            const directions = [
+                { row: -1, col: 0 }, 
+                { row: 1, col: 0 },  
+                { row: 0, col: -1 }, 
+                { row: 0, col: 1 }   
+            ];
+            
+            for (const dir of directions) {
+                const newRow = position.row + dir.row;
+                const newCol = position.col + dir.col;
+                
+                if (newRow >= 0 && newRow < 6 && newCol >= 0 && newCol < 10) {
+                    spaces.push({ row: newRow, col: newCol });
+                }
+            }
+            
+            return spaces;
+        }
+
+        function battleLoop() {
+            if (!gameState.inBattle) return;
+            
+            checkAndRemoveDeadUnits();
+            
+            const allUnits = [...gameState.allyUnits, ...gameState.enemyUnits];
+            
+            allUnits.forEach(unit => {
+                if (unit.stunned) {
+                    unit.stunTimer -= 0.1;
+                    if (unit.stunTimer <= 0) {
+                        unit.stunned = false;
+                    }
+                    return;
+                }
+                if (unit.type === 'W' && unit.shieldTimer > 0) {
+                    unit.shieldTimer -= 0.1;
+                    if (unit.shieldTimer < 0) {
+                        unit.shieldTimer = 0;
+                        // 确保当护盾效果结束时，移除视觉效果
+                        const unitElement = document.querySelector(`.unit[data-id="${unit.id}"]`);
+                        if (unitElement) {
+                            const shieldEffect = unitElement.querySelector('.shield-effect');
+                            if (shieldEffect) {
+                                shieldEffect.remove();
+                            }
+                        }
+                    }
+                }
+        
+                const enemies = unit.isAlly ? gameState.enemyUnits : gameState.allyUnits;
+                if (enemies.length === 0) return;
+                
+                const target = findReachableTarget(unit, enemies);
+                if (!target) return;
+                
+                const distance = calculateDistance(unit, target);
+                
+                if (distance <= unit.attackRange) {
+                    const now = Date.now();
+                    if (now - unit.lastAttackTime >= 1000 / unit.attackSpeed) {
+                        unit.lastAttackTime = now;
+                        attackUnit(unit, target);
+                        
+                        unit.specialTimer += 1 / unit.attackSpeed;
+                        if (unit.specialTimer >= unit.specialCD) {
+                            unit.specialTimer = 0;
+                            useSpecialAbility(unit, target);
+                        }
+                        
+                        updateSkillCooldown(unit);
+                    }
+                } else {
+                    moveTowardsTargetImproved(unit, target);
+                }
+            });
+            
+            if (gameState.allyUnits.length === 0 || gameState.enemyUnits.length === 0) {
+                endBattle();
+                return;
+            }
+            
+            setTimeout(battleLoop, 100);
+        }
+
+        function updateSkillCooldown(unit) {
+            const unitElement = document.querySelector(`.unit[data-id="${unit.id}"]`);
+            if (!unitElement) return;
+            
+            const skillFill = unitElement.querySelector('.skill-fill');
+            if (skillFill) {
+                const progress = (unit.specialTimer / unit.specialCD) * 100;
+                skillFill.style.width = `${progress}%`;
+            }
+        }
+
+        function calculateDistance(unit1, unit2) {
+            return Math.abs(unit1.row - unit2.row) + Math.abs(unit1.col - unit2.col);
+        }      
+
+        function posToKey(pos) {
+            return `${pos.row},${pos.col}`;
+        }
+        
+        function keyToPos(key) {
+            const [row, col] = key.split(',').map(Number);
+            return { row, col };
+        }
+        
+        function getNeighbors(pos, allowOccupied = false) {
+            const directions = [
+                { row: -1, col: 0 }, 
+                { row: 1, col: 0 },  
+                { row: 0, col: -1 }, 
+                { row: 0, col: 1 }   
+            ];
+
+            const neighbors = [];
+            
+            for (const dir of directions) {
+                const newRow = pos.row + dir.row;
+                const newCol = pos.col + dir.col;
+                
+                if (newRow >= 0 && newRow < 6 && newCol >= 0 && newCol < 10) {
+                    const unitAtPos = getUnitAtPosition(newRow, newCol);
+                    if (allowOccupied || !unitAtPos) {
+                        neighbors.push({ row: newRow, col: newCol });
+                    }
+                }
+            }
+            
+            return neighbors;
+        }
+        
+        function heuristic(a, b) {
+            return Math.abs(a.row - b.row) + Math.abs(a.col - b.col);
+        }
+        
+        function aStarSearch(start, goal, allowLongPath = false) {
+            if (start.row === goal.row && start.col === goal.col) {
+                return [];
+            }
+            
+            const targetOccupied = getUnitAtPosition(goal.row, goal.col);
+            
+            if (targetOccupied && !allowLongPath) {
+                const adjacentSpaces = getAdjacentSpaces(goal);
+                const emptySpaces = adjacentSpaces.filter(space => !getUnitAtPosition(space.row, space.col));
+                
+                if (emptySpaces.length > 0) {
+                    emptySpaces.sort((a, b) => heuristic(start, a) - heuristic(start, b));
+                    goal = emptySpaces[0];
+                }
+            }
+            
+            const openList = [start];
+            const openSet = new Set([posToKey(start)]);
+            
+            const closedSet = new Set();
+            
+            const cameFrom = {};
+            
+            const gScore = {};
+            gScore[posToKey(start)] = 0;
+            
+            const fScore = {};
+            fScore[posToKey(start)] = heuristic(start, goal);
+            
+            const maxIterations = allowLongPath ? 200 : 50;
+            let iterations = 0;
+            
+            while (openList.length > 0 && iterations < maxIterations) {
+                iterations++;
+                openList.sort((a, b) => {
+                    const aKey = posToKey(a);
+                    const bKey = posToKey(b);
+                    return (fScore[aKey] || Infinity) - (fScore[bKey] || Infinity);
+                });
+                
+                const current = openList.shift();
+                const currentKey = posToKey(current);
+                openSet.delete(currentKey);
+                if (current.row === goal.row && current.col === goal.col) {
+                    const path = [current];
+                    let currentPathKey = currentKey;
+                    
+                    while (cameFrom[currentPathKey]) {
+                        currentPathKey = cameFrom[currentPathKey];
+                        path.unshift(keyToPos(currentPathKey));
+                    }
+                    return path.slice(1);
+                }
+                closedSet.add(currentKey);
+                
+                const neighbors = getNeighbors(current, allowLongPath);
+                
+                for (const neighbor of neighbors) {
+                    const neighborKey = posToKey(neighbor);
+                    
+                    if (closedSet.has(neighborKey)) {
+                        continue;
+                    }
+                    
+                    const isOccupied = getUnitAtPosition(neighbor.row, neighbor.col);
+                    
+                    const movementCost = isOccupied ? 100 : 1;
+                    const tentativeGScore = gScore[currentKey] + movementCost;
+                    
+                    if (!openSet.has(neighborKey)) {
+                        openList.push(neighbor);
+                        openSet.add(neighborKey);
+                    }
+                    else if (tentativeGScore >= (gScore[neighborKey] || Infinity)) {
+                        continue;
+                    }
+                    
+                    cameFrom[neighborKey] = currentKey;
+                    gScore[neighborKey] = tentativeGScore;
+                    fScore[neighborKey] = tentativeGScore + heuristic(neighbor, goal);
+                }
+            }
+            
+            if (allowLongPath) {
+                const exploredPoints = Array.from(closedSet).map(keyToPos);
+                exploredPoints.sort((a, b) => heuristic(a, goal) - heuristic(b, goal));
+                
+                if (exploredPoints.length > 0) {
+                    const bestPoint = exploredPoints[0];
+                    const bestPointKey = posToKey(bestPoint);
+                    
+                    const path = [bestPoint];
+                    let currentPathKey = bestPointKey;
+                    
+                    while (cameFrom[currentPathKey]) {
+                        currentPathKey = cameFrom[currentPathKey];
+                        path.unshift(keyToPos(currentPathKey));
+                    }
+                    
+                    return path.slice(1);
+                }
+            }
+            
+            return [];
+        }
+        
+        function moveTowardsTargetImproved(unit, target) {
+            if (unit.stunned) {
+                return;
+            }
+            
+            if (Math.random() > unit.moveSpeed) {
+                return; 
+            }
+            
+            if (calculateDistance(unit, target) <= unit.attackRange) {
+                unit.path = null; 
+                return; 
+            }
+            
+            const currentPos = { row: unit.row, col: unit.col };
+            const isSamePosition = unit.lastPosition && 
+                                  unit.lastPosition.row === currentPos.row && 
+                                  unit.lastPosition.col === currentPos.col;
+            
+            if (isSamePosition) {
+                unit.stuckCounter++;
+            } else {
+                unit.stuckCounter = 0;
+                unit.lastPosition = { ...currentPos };
+            }
+            
+            let needNewPath = !unit.path || unit.path.length === 0 || unit.stuckCounter > 3;
+            
+            if (unit.targetId !== target.id) {
+                unit.targetId = target.id;
+                needNewPath = true;
+            }
+            
+            if (needNewPath) {
+                unit.stuckCounter = 0;
+                
+                const adjacentSpaces = getAdjacentSpaces(target);
+                const emptySpaces = adjacentSpaces.filter(space => !getUnitAtPosition(space.row, space.col));
+                
+                let bestPath = [];
+                
+                if (emptySpaces.length > 0) {
+                    emptySpaces.sort((a, b) => heuristic(unit, a) - heuristic(unit, b));
+                    
+                    for (const space of emptySpaces) {
+                        const path = aStarSearch(
+                            { row: unit.row, col: unit.col },
+                            space
+                        );
+                        
+                        if (path.length > 0) {
+                            bestPath = path;
+                            break;
+                        }
+                    }
+                }
+                if (bestPath.length === 0) {
+                    bestPath = aStarSearch(
+                        { row: unit.row, col: unit.col },
+                        { row: target.row, col: target.col },
+                        true
+                    );
+                }
+                
+                unit.path = bestPath;
+            }
+            
+            if (unit.path && unit.path.length > 0) {
+                const nextStep = unit.path[0];
+                if (!getUnitAtPosition(nextStep.row, nextStep.col)) {
+                    unit.row = nextStep.row;
+                    unit.col = nextStep.col;
+                    unit.path.shift(); 
+                    unit.moveFailCounter = 0;
+                    renderUnit(unit);
+                } else {
+                    unit.moveFailCounter++;
+                    if (unit.moveFailCounter > 2) {
+                        unit.path = null;
+                        unit.moveFailCounter = 0;
+                    }
+                }
+            }
+        }
+
+        function showProjectileAttack(attacker, target) {
+            const attackerElement = document.querySelector(`.unit[data-id="${attacker.id}"]`);
+            const targetElement = document.querySelector(`.unit[data-id="${target.id}"]`);
+            
+            if (!attackerElement || !targetElement) return;
+            
+            const attackerRect = attackerElement.getBoundingClientRect();
+            const targetRect = targetElement.getBoundingClientRect();
+            
+            const projectile = document.createElement('div');
+            projectile.className = 'projectile';
+            document.body.appendChild(projectile);
+            
+            projectile.style.left = (attackerRect.left + attackerRect.width / 2 - 6) + 'px'; /* 调整投射物位置 */
+            projectile.style.top = (attackerRect.top + attackerRect.height / 2 - 6) + 'px'; /* 调整投射物位置 */
+            
+            const endX = targetRect.left + targetRect.width / 2 - 6; /* 调整投射物位置 */
+            const endY = targetRect.top + targetRect.height / 2 - 6; /* 调整投射物位置 */
+            
+            const duration = 300;
+            const startTime = Date.now();
+            const startX = parseFloat(projectile.style.left);
+            const startY = parseFloat(projectile.style.top);
+            
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                const currentX = startX + (endX - startX) * progress;
+                const currentY = startY + (endY - startY) * progress;
+                
+                projectile.style.left = currentX + 'px';
+                projectile.style.top = currentY + 'px';
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    projectile.remove();
+                }
+            }
+            
+            animate();
+        }
+
+        function attackUnit(attacker, target) {
+            if (target.dodgeChance > 0 && Math.random() < target.dodgeChance) {
+                showSpecialEffect(target, '💨');
+                return;
+            }
+            
+            let damage = attacker.attack;
+            let isCrit = false;
+            
+            if (attacker.critChance > 0 && Math.random() < attacker.critChance) {
+                damage *= 2;
+                isCrit = true;
+            }
+            
+            const attackerElement = document.querySelector(`.unit[data-id="${attacker.id}"]`);
+            if (attackerElement) {
+                attackerElement.classList.remove('horizontal-shake');
+                
+                void attackerElement.offsetWidth;
+                
+                attackerElement.classList.add('horizontal-shake');
+            }
+            
+            if (['A', 'M', 'H'].includes(attacker.type) && attacker.attackRange > 1) {
+                showProjectileAttack(attacker, target);
+            }
+            
+            if (target.type === 'W' && target.shieldTimer > 0) {
+                damage = Math.floor(damage * 0.5);
+            }
+            
+            target.currentHealth -= damage;
+            
+            if (isCrit) {
+                showSpecialEffect(target, '⚡');
+            }
+            
+            if (attacker.lifesteal) {
+                const healAmount = damage * 0.5;
+                attacker.currentHealth = Math.min(attacker.maxHealth, attacker.currentHealth + healAmount);
+                
+                showSpecialEffect(attacker, '❤️');
+                
+                const attackerHealthFill = attackerElement?.querySelector('.health-fill');
+                if (attackerHealthFill) {
+                    attackerHealthFill.style.width = `${(attacker.currentHealth / attacker.maxHealth) * 100}%`;
+                }
+            }
+            
+            if (target.damageReflection) {
+                const reflectDamage = damage * 0.5;
+                attacker.currentHealth -= reflectDamage;
+                
+                showSpecialEffect(attacker, '⛔');
+                
+                const attackerHealthFill = attackerElement?.querySelector('.health-fill');
+                if (attackerHealthFill) {
+                    attackerHealthFill.style.width = `${Math.max(0, attacker.currentHealth / attacker.maxHealth) * 100}%`;
+                }
+                
+                if (attacker.currentHealth <= 0) {
+                    if (attacker.isAlly) {
+                        gameState.allyUnits = gameState.allyUnits.filter(u => u.id !== attacker.id);
+                    } else {
+                        const isBoss = attacker.isBoss;
+                        gameState.enemyUnits = gameState.enemyUnits.filter(u => u.id !== attacker.id);
+                        gameState.gold += isBoss ? 10 : 4;
+                        updateGoldDisplay();
+                    }
+                    
+                    if (attackerElement) attackerElement.remove();
+                    
+                    if (gameState.hoveredUnit && gameState.hoveredUnit.id === attacker.id) {
+                        gameState.hoveredUnit = null;
+                        clearUnitInfoPanel();
+                    }
+                }
+            }
+            
+            const targetElement = document.querySelector(`.unit[data-id="${target.id}"]`);
+            if (targetElement) {
+                const healthFill = targetElement.querySelector('.health-fill');
+                if (healthFill) {
+                    healthFill.style.width = `${Math.max(0, target.currentHealth / target.maxHealth) * 100}%`;
+                }
+            }
+            
+            if (gameState.hoveredUnit && gameState.hoveredUnit.id === target.id) {
+                updateUnitInfoPanel(target);
+            }
+            
+            if (target.currentHealth <= 0) {
+                if (target.isAlly) {
+                    gameState.allyUnits = gameState.allyUnits.filter(u => u.id !== target.id);
+                } else {
+                    const isBoss = target.isBoss;
+                    if (isBoss && target.equipment && target.equipment.length > 0) {
+                        const randomEquipIndex = Math.floor(Math.random() * target.equipment.length);
+                        const droppedEquipment = target.equipment[randomEquipIndex];
+                        const emptySlotIndex = gameState.inventory.findIndex(item => item === null);
+                        if (emptySlotIndex !== -1) {
+                            gameState.inventory[emptySlotIndex] = droppedEquipment;
+                            alert(`击败Boss! 获得装备: ${droppedEquipment.name} ${droppedEquipment.level}级`);
+                            renderInventory();
+                        } else {
+                            alert(`击败Boss! 但背包已满，无法获得装备！`);
+                        }
+                    }
+                    gameState.enemyUnits = gameState.enemyUnits.filter(u => u.id !== target.id);
+                    gameState.gold += isBoss ? 10 : 4;
+                    updateGoldDisplay();
+                }
+                
+                if (targetElement) targetElement.remove();
+                
+                if (gameState.hoveredUnit && gameState.hoveredUnit.id === target.id) {
+                    gameState.hoveredUnit = null;
+                    clearUnitInfoPanel();
+                }
+            }
+        }
+
+        function showFireballExplosion(target) {
+            const targetElement = document.querySelector(`.unit[data-id="${target.id}"]`);
+            if (!targetElement) return;
+            
+            const targetRect = targetElement.getBoundingClientRect();
+            
+            const explosion = document.createElement('div');
+            explosion.className = 'fireball-explosion';
+            explosion.style.zIndex = '10'; /* 确保爆炸效果在图片上方显示 */
+            document.body.appendChild(explosion);
+            
+            explosion.style.left = (targetRect.left + targetRect.width / 2 - 25) + 'px'; /* 调整爆炸效果位置 */
+            explosion.style.top = (targetRect.top + targetRect.height / 2 - 25) + 'px'; /* 调整爆炸效果位置 */
+            
+            setTimeout(() => {
+                explosion.remove();
+            }, 1000);
+        }
+
+        function useSpecialAbility(unit, target) {
+            const unitElement = document.querySelector(`.unit[data-id="${unit.id}"]`);
+            if (unitElement) {
+                unitElement.classList.remove('vertical-shake');
+                
+                void unitElement.offsetWidth;
+                
+                unitElement.classList.add('vertical-shake');
+            }
+            
+            switch(unit.type) {
+                case 'W': 
+                    unit.shieldTimer = 2;
+                    // 使用新的持续护盾效果替代原来的临时效果
+                    showShieldEffect(unit);
+                    break;
+                    
+                case 'A': 
+                    target.stunned = true;
+                    target.stunTimer = 2; 
+                    showSpecialEffect(target, '💫');
+                    break;
+                    
+                case 'M':
+                    const enemies = unit.isAlly ? gameState.enemyUnits : gameState.allyUnits;
+                    
+                    showSpecialEffect(target, '🔥');
+                    
+                    // 找出所有在范围内的敌人
+                    const affectedEnemies = enemies.filter(enemy => calculateDistance(target, enemy) <= 2);
+                    
+                    // 为每个受影响的敌人显示爆炸效果
+                    affectedEnemies.forEach(enemy => {
+                        showFireballExplosion(enemy);
+                        showSpecialEffect(enemy, '🔥');
+                        
+                        enemy.currentHealth -= 5;
+                        
+                        const enemyElement = document.querySelector(`.unit[data-id="${enemy.id}"]`);
+                        if (enemyElement) {
+                            const healthFill = enemyElement.querySelector('.health-fill');
+                            if (healthFill) {
+                                healthFill.style.width = `${Math.max(0, enemy.currentHealth / enemy.maxHealth) * 100}%`;
+                            }
+                        }
+                        if (gameState.hoveredUnit && gameState.hoveredUnit.id === enemy.id) {
+                            updateUnitInfoPanel(enemy);
+                        }
+                    });
+                    break;
+                    
+                case 'H': 
+                    const allies = unit.isAlly ? gameState.allyUnits : gameState.enemyUnits;
+                    
+                    if (allies.length <= 1) return; 
+                    
+                    let lowestHealthAlly = null;
+                    let lowestHealthPercentage = 1.0;
+                    
+                    allies.forEach(ally => {
+                        if (ally.id !== unit.id) {
+                            const healthPercentage = ally.currentHealth / ally.maxHealth;
+                            if (healthPercentage < lowestHealthPercentage) {
+                                lowestHealthPercentage = healthPercentage;
+                                lowestHealthAlly = ally;
+                            }
+                        }
+                    });
+                    
+                    if (lowestHealthAlly && lowestHealthAlly.currentHealth < lowestHealthAlly.maxHealth) {
+                        lowestHealthAlly.currentHealth = Math.min(lowestHealthAlly.maxHealth, lowestHealthAlly.currentHealth + 10);
+                        
+                        showSpecialEffect(lowestHealthAlly, '❤️');
+                        
+                        const allyElement = document.querySelector(`.unit[data-id="${lowestHealthAlly.id}"]`);
+                        if (allyElement) {
+                            const healthFill = allyElement.querySelector('.health-fill');
+                            if (healthFill) {
+                                healthFill.style.width = `${(lowestHealthAlly.currentHealth / lowestHealthAlly.maxHealth) * 100}%`;
+                            }
+                        }
+                        
+                        if (gameState.hoveredUnit && gameState.hoveredUnit.id === lowestHealthAlly.id) {
+                            updateUnitInfoPanel(lowestHealthAlly);
+                        }
+                    }
+                    break;
+                    
+                case 'S': 
+                    break;    
+            }
+            
+            unit.specialTimer = 0;
+            updateSkillCooldown(unit);
+        }
+        
+        function showSpecialEffect(unit, effectSymbol) {
+            const unitElement = document.querySelector(`.unit[data-id="${unit.id}"]`);
+            if (!unitElement) return;
+            
+            const effect = document.createElement('div');
+            effect.textContent = effectSymbol;
+            effect.style.position = 'absolute';
+            effect.style.fontSize = '28px'; /* 增加特效大小 */
+            effect.style.top = '-25px'; /* 调整特效位置 */
+            effect.style.animation = 'fadeUp 1s forwards';
+            effect.style.zIndex = '10'; /* 确保特效在图片上方显示 */
+            effect.style.color = 'white'; /* 恢复特效文本颜色 */
+            effect.style.textShadow = '0 0 5px rgba(0,0,0,0.5)'; /* 添加文字阴影 */
+            
+            unitElement.appendChild(effect);
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeUp {
+                    0% { opacity: 1; transform: translateY(0); }
+                    100% { opacity: 0; transform: translateY(-30px); }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            setTimeout(() => {
+                effect.remove();
+            }, 1000);
+        }
+
+        // 添加新函数用于显示持续的护盾效果
+        function showShieldEffect(unit) {
+            const unitElement = document.querySelector(`.unit[data-id="${unit.id}"]`);
+            if (!unitElement) return;
+            
+            // 移除可能已存在的护盾效果
+            const existingShield = unitElement.querySelector('.shield-effect');
+            if (existingShield) {
+                existingShield.remove();
+            }
+            
+            // 创建新的护盾效果
+            const shieldEffect = document.createElement('div');
+            shieldEffect.className = 'shield-effect';
+            shieldEffect.textContent = '🛡️';
+            shieldEffect.style.position = 'absolute';
+            shieldEffect.style.fontSize = '28px'; /* 增加护盾效果大小 */
+            shieldEffect.style.top = '-25px'; /* 调整护盾效果位置 */
+            shieldEffect.style.opacity = '1';
+            shieldEffect.style.zIndex = '10'; /* 确保护盾效果在图片上方显示 */
+            shieldEffect.style.color = 'white'; /* 恢复护盾效果文本颜色 */
+            shieldEffect.style.textShadow = '0 0 5px rgba(0,0,0,0.5)'; /* 添加文字阴影 */
+            
+            unitElement.appendChild(shieldEffect);
+            
+            // 设置定时器，在护盾效果结束时移除
+            setTimeout(() => {
+                shieldEffect.remove();
+            }, unit.shieldTimer * 1000);
+        }
+
+        function endBattle() {
+            gameState.inBattle = false;
+            
+            if (gameState.enemyUnits.length === 0) {
+                gameState.gold += 10;
+                updateGoldDisplay();
+                gameState.wave++;
+                updateWaveDisplay();
+                alert(`第${gameState.wave - 1}波战斗胜利！获得10金币！`);
+            } else {
+                gameState.baseHealth--;
+                updateBaseHealthDisplay();
+                
+                if (gameState.baseHealth <= 0) {
+                    alert(`游戏结束！你坚持了${gameState.wave}波！`);
+                    resetGame();
+                    return;
+                } else {
+                    alert(`战斗失败！大本营剩余生命：${gameState.baseHealth}`);
+                }
+            }
+            
+            gameState.allyUnits = [];
+            gameState.enemyUnits = [];
+            
+            const units = document.querySelectorAll('.unit');
+            units.forEach(unit => unit.remove());
+            
+            gameState.refreshCost = 0;
+            gameState.refreshCount = 0;
+            document.getElementById('refresh-button').textContent = `刷新装备 (0金币)`;
+            
+            gameState.allyUnitBackup.forEach(unitData => {
+                const newUnit = createUnit(
+                    unitData.type,
+                    unitData.level,
+                    unitData.row,
+                    unitData.col,
+                    true
+                );
+                
+                newUnit.currentHealth = newUnit.maxHealth;
+                
+                if (unitData.equipment) {
+                    newUnit.equipment = [...unitData.equipment];
+                    
+                    newUnit.equipment.forEach(equipment => {
+                        applyEquipmentEffect(newUnit, equipment);
+                        
+                        if (equipment.specialAttribute) {
+                            switch(equipment.specialAttribute.name) {
+                                case "吸血":
+                                    newUnit.lifesteal = true;
+                                    break;
+                                case "暴击":
+                                    newUnit.critChance = 0.2;
+                                    break;
+                                case "反伤":
+                                    newUnit.damageReflection = true;
+                                    break;
+                                case "闪避":
+                                    newUnit.dodgeChance = 0.3;
+                                    break;
+                            }
+                        }
+                    });
+                }
+                
+                if (newUnit.type === 'S') {
+                    newUnit.teleported = false;
+                }
+        
+                gameState.allyUnits.push(newUnit);
+                renderUnit(newUnit);
+            });
+            
+            document.getElementById('summon-ally').disabled = false;
+            document.getElementById('summon-enemy').disabled = false;
+            document.getElementById('start-battle').disabled = true;
+            
+            if (gameState.wave % 5 === 0) {
+                spawnBoss();
+            }
+            
+            checkUpgradeAvailability();
+            refreshShop();
+            
+            clearUnitInfoPanel();
+        }
+
+        function resetGame() {
+            gameState.gold = 20;
+            gameState.wave = 1;
+            gameState.baseHealth = 3;
+            gameState.summonCost = 2;
+            gameState.inBattle = false;
+            gameState.allyUnits = [];
+            gameState.enemyUnits = [];
+            gameState.allyUnitBackup = [];
+            gameState.selectedUnit = null;
+            gameState.hoveredUnit = null;
+            gameState.selectedEquipment = null;
+            gameState.inventory = Array(10).fill(null);
+            gameState.shopItems = Array(3).fill(null);
+            gameState.refreshCost = 0;
+            gameState.refreshCount = 0;
+            
+            for (const key in gameState.upgradeReady) {
+                gameState.upgradeReady[key] = false;
+            }
+            
+            updateGoldDisplay();
+            updateWaveDisplay();
+            updateBaseHealthDisplay();
+            
+            const units = document.querySelectorAll('.unit');
+            units.forEach(unit => unit.remove());
+            
+            document.getElementById('summon-ally').disabled = false;
+            document.getElementById('summon-ally').textContent = `召唤英雄 (花费2金币)`;
+            document.getElementById('start-battle').disabled = true;
+            document.getElementById('summon-enemy').disabled = false;
+            
+            clearUnitInfoPanel();
+            refreshShop();
+            renderInventory();
+        }
+
+        function initGame() {
+            initializeBoard();
+            initializeInventory();
+            refreshShop();
+            updateGoldDisplay();
+            updateWaveDisplay();
+            updateBaseHealthDisplay();
+            
+            document.getElementById('summon-ally').addEventListener('click', summonAllyHero);
+            document.getElementById('start-battle').addEventListener('click', startBattle);
+            document.getElementById('summon-enemy').addEventListener('click', summonEnemyHero);
+            document.getElementById('refresh-button').addEventListener('click', () => {
+                if (gameState.gold < gameState.refreshCost) {
+                    alert('金币不足!');
+                    return;
+                }
+                
+                gameState.gold -= gameState.refreshCost;
+                updateGoldDisplay();
+                
+                gameState.refreshCount++;
+                gameState.refreshCost = 5 * gameState.refreshCount;
+                
+                refreshShop();
+            });
+        }
+        
+        window.onload = initGame;
+    </script>
+</body>
+</html>
