@@ -2,21 +2,16 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="ScreenOrientation" content="autoRotate:disabled">
     <title>自走棋</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            touch-action: manipulation; /* 优化触摸操作 */
-        }
-
-        :root {
-            --unit-size: min(70px, 10vw); /* 使用动态单位 */
-            --spacing-sm: 5px;
-            --spacing-md: 10px;
-            --spacing-lg: 20px;
+            touch-action: manipulation;
+            user-select: none;
         }
 
         body {
@@ -26,31 +21,33 @@
             align-items: center;
             min-height: 100vh;
             background-color: #f0f0f0;
-            padding: var(--spacing-md);
-            overflow-x: hidden; /* 防止横向滚动 */
+            padding: 10px;
+            overflow: hidden;
         }
 
         #game-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: var(--spacing-lg);
+            gap: 10px;
             width: 100%;
-            max-width: 1600px; /* 增加最大宽度 */
+            max-width: 100vw;
+            height: 100vh;
             background-color: #fff;
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            padding: var(--spacing-lg);
+            padding: 10px;
+            overflow: hidden;
         }
 
         #game-info {
             display: flex;
             width: 100%;
             justify-content: space-between;
-            font-size: clamp(16px, 2vw, 20px); /* 响应式字体大小 */
+            font-size: 16px;
             font-weight: bold;
-            margin-bottom: var(--spacing-md);
-            padding: var(--spacing-md);
+            margin-bottom: 5px;
+            padding: 5px 10px;
             background-color: #f8f8f8;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
@@ -59,40 +56,169 @@
         #game-main {
             display: flex;
             width: 100%;
-            gap: var(--spacing-lg);
-            justify-content: space-between; /* 改为space-between */
-            align-items: flex-start; /* 顶部对齐 */
+            height: calc(100% - 120px);
+            gap: 10px;
+            justify-content: space-between;
+            align-items: stretch;
         }
 
         #left-panel {
             display: flex;
             flex-direction: column;
-            gap: var(--spacing-lg);
-            width: 280px;
-            min-width: 250px; /* 设置最小宽度 */
+            gap: 10px;
+            width: 22%;
+            min-width: 200px;
         }
 
         #shop-panel {
-            width: 100%;
-            height: 50%;
+            flex: 1;
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            padding: 15px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 5px;
             position: relative;
             border: 1px solid #eee;
+            overflow-y: auto;
         }
 
         #inventory-panel {
-            width: 100%;
+            flex: 1;
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            padding: 15px;
+            padding: 10px;
             border: 1px solid #eee;
+        }
+
+        #game-board {
+            width: 56%;
+            aspect-ratio: 10/6;
+            align-self: center;
+        }
+
+        #unit-info-panel {
+            width: 22%;
+            min-width: 200px;
+            height: 100%;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border: 1px solid #eee;
+            overflow-y: auto;
+        }
+
+        .cell {
+            font-size: 12px;
+            min-width: 30px;
+            min-height: 30px;
+        }
+
+        .unit {
+            font-size: 12px;
+        }
+
+        .equipment-icon {
+            width: 30px;
+            height: 30px;
+            font-size: 16px;
+        }
+
+        .inventory-slot {
+            min-width: 30px;
+            min-height: 30px;
+        }
+
+        #control-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            padding: 5px;
+        }
+
+        #control-buttons button {
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 900px) {
+            #game-main {
+                gap: 5px;
+            }
+
+            #left-panel {
+                min-width: 150px;
+                width: 25%;
+            }
+
+            #game-board {
+                width: 50%;
+            }
+
+            #unit-info-panel {
+                min-width: 150px;
+                width: 25%;
+            }
+
+            .shop-title, .inventory-title, .info-title {
+                font-size: 14px;
+            }
+
+            .info-row {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 700px) {
+            #game-info {
+                font-size: 14px;
+            }
+
+            .shop-item {
+                padding: 3px 5px;
+                min-height: 35px;
+            }
+
+            .buy-button {
+                padding: 3px 6px;
+                font-size: 12px;
+            }
+
+            .refresh-button {
+                padding: 3px 6px;
+                font-size: 12px;
+            }
+
+            #control-buttons button {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+
+        @media (orientation: portrait) {
+            body::after {
+                content: "请横屏使用";
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 24px;
+                color: #333;
+                background: white;
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                z-index: 9999;
+            }
+
+            #game-container {
+                display: none;
+            }
         }
 
         .shop-title, .inventory-title {
@@ -120,18 +246,6 @@
             background-color: #f9f9f9;
             min-height: 40px; /* 增加高度 */
             border: 1px solid #eee;
-        }
-
-        .equipment-icon {
-            width: 36px; /* 增加装备图标大小 */
-            height: 36px; /* 增加装备图标大小 */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border-radius: 4px;
-            color: white;
-            font-size: 18px; /* 增加字体大小 */
-            cursor: pointer;
         }
 
         .buy-button {
@@ -215,17 +329,6 @@
             font-size: 20px; /* 增加字体大小 */
         }
 
-        #unit-info-panel {
-            width: 280px;
-            min-width: 250px; /* 设置最小宽度 */
-            height: 100%;
-            padding: var(--spacing-md);
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            border: 1px solid #eee;
-        }
-
         #unit-info-content {
             height: 100%;
             max-height: 400px; /* 增加高度 */
@@ -266,15 +369,6 @@
             padding: 8px;
             background-color: #f9f9f9;
             border-radius: 5px;
-        }
-
-        #control-buttons {
-            display: flex;
-            gap: 15px; /* 增加间距 */
-            flex-wrap: wrap;
-            justify-content: center;
-            width: 100%;
-            margin-top: 10px;
         }
 
         button {
@@ -360,82 +454,6 @@
             box-shadow: 0 0 15px #ff6600; /* 添加光晕效果 */
         }
 
-        @media (max-width: 1200px) {
-            :root {
-                --unit-size: min(60px, 8vw);
-            }
-
-            #game-main {
-                flex-direction: row;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            #left-panel {
-                order: 2;
-                flex-direction: row;
-                width: 100%;
-                max-width: 800px;
-            }
-
-            #shop-panel, #inventory-panel {
-                width: 50%;
-            }
-
-            #unit-info-panel {
-                order: 3;
-                width: 100%;
-                max-width: 800px;
-                margin-top: var(--spacing-lg);
-            }
-
-            #game-board {
-                order: 1;
-                margin-bottom: var(--spacing-lg);
-            }
-        }
-
-        @media (max-width: 768px) {
-            :root {
-                --unit-size: min(50px, 7vw);
-            }
-
-            #game-container {
-                padding: var(--spacing-sm);
-            }
-
-            #game-info {
-                font-size: 14px;
-                padding: var(--spacing-sm);
-            }
-
-            .unit-actions button {
-                padding: 2px 4px;
-                font-size: 12px;
-            }
-
-            .equipment-icon {
-                width: 30px;
-                height: 30px;
-                font-size: 16px;
-            }
-        }
-
-        /* 添加横屏检测 */
-        @media (orientation: landscape) and (max-height: 600px) {
-            #game-container {
-                padding: var(--spacing-sm);
-            }
-
-            #game-main {
-                gap: var(--spacing-sm);
-            }
-
-            #left-panel {
-                gap: var(--spacing-sm);
-            }
-        }
-
         .equipment-level-1 {
             background-color: #3498db;
         }
@@ -446,27 +464,6 @@
 
         .equipment-level-3 {
             background-color: #9b59b6;
-        }
-
-        #game-board {
-            display: grid;
-            grid-template-columns: repeat(10, var(--unit-size));
-            grid-template-rows: repeat(6, var(--unit-size));
-            gap: 3px;
-            margin: 0 auto;
-        }
-
-        .cell {
-            width: 100%;
-            aspect-ratio: 1/1;
-            border: 1px solid #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            cursor: pointer;
-            border-radius: 4px;
-            touch-action: manipulation;
         }
 
         .ally-area {
@@ -483,8 +480,8 @@
 
         .unit {
             position: absolute;
-            width: 85%;
-            height: 85%;
+            width: 85%; /* 增加单位大小 */
+            height: 85%; /* 增加单位大小 */
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -496,8 +493,8 @@
             background-size: contain;
             background-position: center;
             background-repeat: no-repeat;
-            color: transparent;
-            touch-action: manipulation;
+            color: transparent; /* 隐藏文本 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* 添加阴影效果 */
         }
 
         .ally-unit {
