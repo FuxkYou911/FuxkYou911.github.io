@@ -9,6 +9,14 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            touch-action: manipulation; /* 优化触摸操作 */
+        }
+
+        :root {
+            --unit-size: min(70px, 10vw); /* 使用动态单位 */
+            --spacing-sm: 5px;
+            --spacing-md: 10px;
+            --spacing-lg: 20px;
         }
 
         body {
@@ -18,30 +26,31 @@
             align-items: center;
             min-height: 100vh;
             background-color: #f0f0f0;
-            padding: 20px;
+            padding: var(--spacing-md);
+            overflow-x: hidden; /* 防止横向滚动 */
         }
 
         #game-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
+            gap: var(--spacing-lg);
             width: 100%;
-            max-width: 1300px; /* 增加最大宽度 */
+            max-width: 1600px; /* 增加最大宽度 */
             background-color: #fff;
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            padding: 20px;
+            padding: var(--spacing-lg);
         }
 
         #game-info {
             display: flex;
             width: 100%;
             justify-content: space-between;
-            font-size: 20px; /* 增加字体大小 */
+            font-size: clamp(16px, 2vw, 20px); /* 响应式字体大小 */
             font-weight: bold;
-            margin-bottom: 15px;
-            padding: 10px 15px;
+            margin-bottom: var(--spacing-md);
+            padding: var(--spacing-md);
             background-color: #f8f8f8;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
@@ -50,15 +59,17 @@
         #game-main {
             display: flex;
             width: 100%;
-            gap: 20px;
-            justify-content: center; /* 居中显示 */
+            gap: var(--spacing-lg);
+            justify-content: space-between; /* 改为space-between */
+            align-items: flex-start; /* 顶部对齐 */
         }
 
         #left-panel {
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            width: 280px; /* 增加宽度 */
+            gap: var(--spacing-lg);
+            width: 280px;
+            min-width: 250px; /* 设置最小宽度 */
         }
 
         #shop-panel {
@@ -205,9 +216,10 @@
         }
 
         #unit-info-panel {
-            width: 280px; /* 增加宽度 */
+            width: 280px;
+            min-width: 250px; /* 设置最小宽度 */
             height: 100%;
-            padding: 15px;
+            padding: var(--spacing-md);
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
@@ -349,39 +361,78 @@
         }
 
         @media (max-width: 1200px) {
-            #game-container {
-                max-width: 100%;
-                padding: 10px;
+            :root {
+                --unit-size: min(60px, 8vw);
             }
-            
+
             #game-main {
-                flex-direction: column;
-                align-items: center;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
             }
-            
+
             #left-panel {
+                order: 2;
                 flex-direction: row;
                 width: 100%;
+                max-width: 800px;
             }
-            
+
             #shop-panel, #inventory-panel {
                 width: 50%;
-                height: auto;
             }
-            
-            #game-board {
-                grid-template-columns: repeat(10, minmax(30px, 50px)); /* 响应式调整 */
-                grid-template-rows: repeat(6, minmax(30px, 50px)); /* 响应式调整 */
-            }
-            
+
             #unit-info-panel {
+                order: 3;
                 width: 100%;
-                margin-top: 15px;
+                max-width: 800px;
+                margin-top: var(--spacing-lg);
             }
-            
-            #control-buttons button {
+
+            #game-board {
+                order: 1;
+                margin-bottom: var(--spacing-lg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --unit-size: min(50px, 7vw);
+            }
+
+            #game-container {
+                padding: var(--spacing-sm);
+            }
+
+            #game-info {
                 font-size: 14px;
-                padding: 8px 12px;
+                padding: var(--spacing-sm);
+            }
+
+            .unit-actions button {
+                padding: 2px 4px;
+                font-size: 12px;
+            }
+
+            .equipment-icon {
+                width: 30px;
+                height: 30px;
+                font-size: 16px;
+            }
+        }
+
+        /* 添加横屏检测 */
+        @media (orientation: landscape) and (max-height: 600px) {
+            #game-container {
+                padding: var(--spacing-sm);
+            }
+
+            #game-main {
+                gap: var(--spacing-sm);
+            }
+
+            #left-panel {
+                gap: var(--spacing-sm);
             }
         }
 
@@ -399,10 +450,10 @@
 
         #game-board {
             display: grid;
-            grid-template-columns: repeat(10, minmax(40px, 70px)); /* 增加棋盘格子大小 */
-            grid-template-rows: repeat(6, minmax(40px, 70px)); /* 增加棋盘格子大小 */
-            gap: 3px; /* 增加格子间距 */
-            margin: 0 auto; /* 居中显示 */
+            grid-template-columns: repeat(10, var(--unit-size));
+            grid-template-rows: repeat(6, var(--unit-size));
+            gap: 3px;
+            margin: 0 auto;
         }
 
         .cell {
@@ -414,7 +465,8 @@
             align-items: center;
             position: relative;
             cursor: pointer;
-            border-radius: 4px; /* 添加圆角 */
+            border-radius: 4px;
+            touch-action: manipulation;
         }
 
         .ally-area {
@@ -431,8 +483,8 @@
 
         .unit {
             position: absolute;
-            width: 85%; /* 增加单位大小 */
-            height: 85%; /* 增加单位大小 */
+            width: 85%;
+            height: 85%;
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -444,8 +496,8 @@
             background-size: contain;
             background-position: center;
             background-repeat: no-repeat;
-            color: transparent; /* 隐藏文本 */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* 添加阴影效果 */
+            color: transparent;
+            touch-action: manipulation;
         }
 
         .ally-unit {
